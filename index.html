@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>BFM Recreation — 17 Jun 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b10; --panel:#0c1219cc; --line:#1b2935;
+  --ink:#cde3ef; --dim:#5e7889; --faint:#33485a;
+  --j1:#39d6ff; --j2:#ff7a2f; --rng:#9ad84a; --warn:#ff3b54;
+  --hud:#7fe3b0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);
+  font-family:'Azeret Mono',monospace;color:var(--ink);-webkit-text-size-adjust:100%}
+#stage{position:fixed;inset:0}
+canvas{display:block}
+
+.t{font-family:'Chakra Petch',sans-serif;letter-spacing:.06em}
+.up{text-transform:uppercase}
+.dim{color:var(--dim)} .faint{color:var(--faint)}
+
+/* top bar */
+#top{position:fixed;top:0;left:0;right:0;display:flex;gap:0;
+  padding:9px 12px;align-items:flex-start;justify-content:space-between;
+  background:linear-gradient(180deg,#070b10ee,#070b1000);pointer-events:none;z-index:5}
+#title{pointer-events:none}
+#title h1{font:600 14px/1 'Chakra Petch';letter-spacing:.14em;text-transform:uppercase}
+#title .sub{font-size:10px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
+
+/* range/closure HUD center-top */
+#sep{pointer-events:none;text-align:center;font-family:'Chakra Petch';margin-top:-1px}
+#sep .rng{font-size:26px;font-weight:700;letter-spacing:.04em;line-height:1;color:var(--rng)}
+#sep .rng.hot{color:var(--warn)}
+#sep .rlbl{font-size:9px;color:var(--dim);letter-spacing:.22em;margin-top:3px}
+#sep .clo{font-size:11px;margin-top:4px;color:var(--ink)}
+
+/* jet readouts */
+.read{min-width:140px;background:var(--panel);border:1px solid var(--line);
+  border-radius:7px;padding:7px 9px;pointer-events:auto;backdrop-filter:blur(7px)}
+.read .nm{display:flex;align-items:center;gap:6px;font:700 12px 'Chakra Petch';letter-spacing:.1em}
+.dot{width:9px;height:9px;border-radius:2px;flex:none;box-shadow:0 0 8px currentColor}
+.read .row{display:flex;justify-content:space-between;font-size:11px;margin-top:4px;gap:10px}
+.read .row b{font-weight:600;font-variant-numeric:tabular-nums}
+.read .row .k{color:var(--dim);font-size:9px;letter-spacing:.1em;align-self:center}
+.read.r1{border-color:#1d4655} .read.r2{border-color:#5a3318}
+
+/* bottom transport */
+#bottom{position:fixed;left:0;right:0;bottom:0;z-index:6;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,#070b10f2,#070b1000)}
+#clock{font-family:'Chakra Petch';font-size:13px;letter-spacing:.08em;
+  display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+#clock .z{font-size:18px;font-weight:700}
+#clock .el{color:var(--dim);font-size:11px}
+#scrub{position:relative;height:30px;margin:2px 0 8px;touch-action:none;cursor:pointer}
+#track{position:absolute;top:13px;left:0;right:0;height:4px;border-radius:2px;
+  background:var(--faint);overflow:hidden}
+#fill{position:absolute;height:100%;width:0;background:var(--hud);box-shadow:0 0 10px var(--hud)}
+/* per-jet activity bands */
+.band{position:absolute;height:3px;border-radius:2px;top:23px;opacity:.85}
+#knob{position:absolute;top:7px;width:3px;height:16px;background:#fff;
+  box-shadow:0 0 10px #fff;transform:translateX(-50%)}
+#hot{position:absolute;top:4px;width:0;height:0;border-left:5px solid transparent;
+  border-right:5px solid transparent;border-top:7px solid var(--warn);
+  transform:translateX(-50%);display:none}
+
+.ctrls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+button{font-family:'Chakra Petch';font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink);background:#0e1620;border:1px solid var(--line);border-radius:6px;
+  padding:8px 11px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+button:hover{border-color:#2f4456}
+button.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
+button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-width:54px;font-weight:700}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.spd{min-width:40px;text-align:center}
+
+/* settings drawer */
+#gear{position:fixed;top:50px;right:12px;z-index:7;pointer-events:auto}
+#panel{position:fixed;top:84px;right:12px;width:212px;z-index:8;
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:11px;backdrop-filter:blur(10px);display:none}
+#panel.open{display:block}
+#panel h3{font:700 10px 'Chakra Petch';letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:8px}
+.opt{display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:11px}
+.sw{width:38px;height:20px;border-radius:11px;background:#1b2935;position:relative;cursor:pointer;flex:none}
+.sw.on{background:#2c6f82}
+.sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:#cde3ef;transition:left .15s}
+.sw.on i{left:20px}
+#panel input[type=range]{width:100%;margin-top:6px;accent-color:var(--hud)}
+.vx{font-size:11px;display:flex;justify-content:space-between}
+
+#views{position:fixed;left:12px;top:84px;z-index:7;display:flex;flex-direction:column;gap:6px}
+#views button{min-width:84px;text-align:left}
+
+#zoom{position:fixed;right:12px;bottom:148px;z-index:7;display:flex;flex-direction:column;gap:6px}
+#zoom button{width:46px;height:46px;padding:0;font-size:22px;font-weight:600;line-height:1;
+  display:flex;align-items:center;justify-content:center;border-radius:8px}
+#zoom button:active{background:#13303a;border-color:#2c6f82}
+
+#hint{position:fixed;left:0;right:0;bottom:120px;text-align:center;font-size:10px;
+  color:var(--faint);pointer-events:none;letter-spacing:.1em;z-index:4}
+
+/* landing / upload */
+#landing{position:fixed;inset:0;z-index:20;
+  background:radial-gradient(120% 90% at 50% 0%,#0b141d,#05080c 70%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:24px;text-align:center}
+#landing .brand{font:700 22px/1 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase}
+#landing .tag{font-size:11px;color:var(--dim);letter-spacing:.12em;margin-top:9px;
+  max-width:440px;line-height:1.6}
+#drop{width:min(440px,90vw);border:1.5px dashed #2c4456;border-radius:14px;
+  background:#0a121bcc;padding:32px 24px;cursor:pointer;
+  transition:border-color .15s,background .15s}
+#drop.hot{border-color:var(--hud);background:#0e1c22}
+#drop .big{font:700 13px 'Chakra Petch';letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+#drop .small{font-size:11px;color:var(--dim);margin-top:9px;line-height:1.5}
+#landing .or{font-size:10px;color:var(--faint);letter-spacing:.22em}
+#demoBtn{font-family:'Chakra Petch';font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  color:#04140d;background:var(--hud);border:1px solid var(--hud);border-radius:7px;
+  padding:11px 20px;cursor:pointer;font-weight:700}
+#lerr{color:var(--warn);font-size:11px;min-height:14px;letter-spacing:.04em}
+
+@media (max-width:560px){
+  .read{min-width:118px;padding:6px 7px}
+  #sep .rng{font-size:21px}
+  #views button{min-width:0;padding:7px 8px}
+  #title h1{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div id="landing">
+  <div>
+    <div class="brand">BFM Recreation</div>
+    <div class="tag">3D dogfight debrief built from your ForeFlight track logs.
+      Drop the aircraft KML exports below — typically two, one per jet — to fly the merge.</div>
+  </div>
+  <div id="drop">
+    <div class="big">Drop KML files here</div>
+    <div class="small">or click to choose · everything runs in your browser, nothing is uploaded</div>
+  </div>
+  <input id="fileInput" type="file" accept=".kml,application/vnd.google-earth.kml+xml" multiple hidden>
+  <div class="or">— or —</div>
+  <button id="demoBtn">▶ View demo flight</button>
+  <div id="lerr"></div>
+</div>
+
+<div id="top">
+  <div class="read r1" id="rd1">
+    <div class="nm"><span class="dot" style="color:var(--j1)"></span><span>JET 1</span></div>
+    <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
+    <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
+    <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
+    <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div id="title"><h1>BFM RECREATION</h1><div class="sub" id="subt">17 JUN 2026 · KNGW WORKING AREA</div></div>
+    <div id="sep">
+      <div class="rng" id="rngv">—</div>
+      <div class="rlbl">SLANT RANGE</div>
+      <div class="clo" id="clov">—</div>
+    </div>
+  </div>
+
+  <div class="read r2" id="rd2">
+    <div class="nm"><span class="dot" style="color:var(--j2)"></span><span>JET 2</span></div>
+    <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
+    <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
+    <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
+    <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+  </div>
+</div>
+
+<div id="views">
+  <button data-v="god">God's Eye</button>
+  <button data-v="chase1">Chase J1</button>
+  <button data-v="chase2">Chase J2</button>
+  <button data-v="side">Side</button>
+  <button data-v="free" class="on">Free Orbit</button>
+</div>
+
+<div id="zoom">
+  <button id="zin" aria-label="Zoom in">+</button>
+  <button id="zout" aria-label="Zoom out">−</button>
+</div>
+
+<button id="gear">⚙ Display</button>
+<div id="panel">
+  <h3>Display</h3>
+  <div class="opt"><span>Altitude curtains</span><div class="sw on" data-t="curtain"><i></i></div></div>
+  <div class="opt"><span>Range vector</span><div class="sw on" data-t="rangevec"><i></i></div></div>
+  <div class="opt"><span>Full traces</span><div class="sw" data-t="traces"><i></i></div></div>
+  <div class="opt"><span>Ground shadows</span><div class="sw" data-t="shadow"><i></i></div></div>
+  <div class="opt"><span>Grid</span><div class="sw on" data-t="grid"><i></i></div></div>
+  <h3 style="margin-top:12px">Vertical exaggeration</h3>
+  <input id="vx" type="range" min="1" max="6" step="0.5" value="2.5">
+  <div class="vx"><span class="dim">1×</span><span id="vxv">2.5×</span><span class="dim">6×</span></div>
+  <h3 style="margin-top:12px">Trail length</h3>
+  <input id="trail" type="range" min="0" max="180" step="10" value="60">
+  <div class="vx"><span class="dim">off</span><span id="trailv">60 s</span><span class="dim">180</span></div>
+</div>
+
+<div id="hint">DRAG orbit · PINCH/SCROLL zoom · scrub timeline below</div>
+
+<div id="bottom">
+  <div id="clock">
+    <span class="z" id="zt">20:35:59Z</span>
+    <span class="el" id="elt">T+00:00 / 1:07:18 · MERGE —</span>
+  </div>
+  <div id="scrub">
+    <div id="track"><div id="fill"></div></div>
+    <div class="band" id="b1" style="background:var(--j1)"></div>
+    <div class="band" id="b2" style="background:var(--j2)"></div>
+    <div id="hot"></div>
+    <div id="knob"></div>
+  </div>
+  <div class="ctrls">
+    <button class="play" id="play">PLAY</button>
+    <button id="rewind">◀◀ Rew</button>
+    <div class="seg" id="spd">
+      <button data-s="1">1×</button><button data-s="2" class="on">2×</button>
+      <button data-s="4">4×</button><button data-s="8">8×</button><button data-s="16">16×</button>
+    </div>
+    <button id="merge">↦ Merge</button>
+    <button id="rew">⟲ Start</button>
+  </div>
+</div>
+
+<script src="trackdata.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ============================================================
+// KML -> TRACK_DATA  (JS port of convert.py \u2014 runs in-browser)
+//   x = East (m), y = Up (m), z = North (m), relative to mean lat/lon.
+//   Each sample is [E, Up, North, t_seconds_since_shared_epoch].
+// ============================================================
+const round1=x=>Math.round(x*10)/10;
+
+function parseKML(text){
+  const xml=new DOMParser().parseFromString(text,'application/xml');
+  if(xml.querySelector('parsererror')) throw new Error('not valid XML');
+  const whens=[], coords=[];
+  // namespace-agnostic: <when> and <gx:coord> ("lon lat alt")
+  for(const el of xml.getElementsByTagName('*')){
+    const tag=el.localName;
+    if(tag==='when'){ whens.push(el.textContent.trim()); }
+    else if(tag==='coord'){
+      const p=el.textContent.trim().split(/\s+/).map(Number);
+      if(p.length>=3 && p.every(n=>!Number.isNaN(n))) coords.push([p[0],p[1],p[2]]);
+    }
+  }
+  if(!coords.length) throw new Error('no <gx:coord> samples found \u2014 is this a ForeFlight track log?');
+  return {whens,coords};
+}
+
+// seconds since 1970 for "YYYY-MM-DDTHH:MM:SS..." treated as UTC (consistent clock)
+const secEpoch=w=>Date.parse(w.slice(0,19)+'Z');
+
+function tailOf(fn){
+  let base=fn.replace(/^.*[\\/]/,'').replace(/\.kml$/i,'');
+  if(base.startsWith('TrackLog_')) base=base.slice('TrackLog_'.length);
+  return base.split('-')[0].slice(0,8) || base;
+}
+
+function buildTrackData(files){
+  const parsed=files.map(f=>{
+    const {whens,coords}=parseKML(f.text);
+    if(!whens.length) throw new Error(`${f.name}: no <when> timestamps`);
+    return {name:f.name, whens, coords, t0:secEpoch(whens[0])};
+  });
+  const epochMs=Math.min(...parsed.map(p=>p.t0));
+  let sumLat=0,sumLon=0,n=0;
+  parsed.forEach(p=>p.coords.forEach(c=>{sumLon+=c[0];sumLat+=c[1];n++;}));
+  const lat0=sumLat/n, lon0=sumLon/n;
+  const mlat=110570.0, mlon=111320.0*Math.cos(lat0*Math.PI/180);
+  const out={ref:{lat0,lon0}, epoch:new Date(epochMs).toISOString().slice(0,19)+'Z', tracks:[]};
+  let tmax=0;
+  parsed.forEach((p,i)=>{
+    const pts=[], m=Math.min(p.coords.length,p.whens.length);
+    for(let k=0;k<m;k++){
+      const [lon,lat,alt]=p.coords[k];
+      const sec=(secEpoch(p.whens[k])-epochMs)/1000;
+      const e=(lon-lon0)*mlon, north=(lat-lat0)*mlat, u=Math.max(alt,0);
+      pts.push([round1(e),round1(u),round1(north),Math.round(sec)]);
+      if(sec>tmax)tmax=sec;
+    }
+    out.tracks.push({
+      label:`JET ${i+1}`,
+      tail:tailOf(p.name),
+      start:Math.round((p.t0-epochMs)/1000),
+      maxalt_ft:Math.round(Math.max(...p.coords.map(c=>c[2]))*3.280839895),
+      pts,
+    });
+  });
+  out.tmax=Math.round(tmax);
+  return out;
+}
+
+// ============================================================
+// Landing screen: pick demo data or upload your own KML files
+// ============================================================
+(function(){
+  const landing=document.getElementById('landing');
+  const fileInput=document.getElementById('fileInput');
+  const drop=document.getElementById('drop');
+  const demoBtn=document.getElementById('demoBtn');
+  const err=document.getElementById('lerr');
+  if(!window.TRACK_DATA) demoBtn.style.display='none';   // no trackdata.js shipped
+
+  let launched=false;
+  function launch(data){
+    if(launched) return;
+    launched=true;
+    landing.style.display='none';
+    startViewer(data);
+  }
+  demoBtn.onclick=()=>{ if(window.TRACK_DATA) launch(window.TRACK_DATA); };
+
+  async function handleFiles(list){
+    err.textContent='';
+    const kmls=[...list].filter(f=>/\.kml$/i.test(f.name));
+    if(!kmls.length){ err.textContent='Please choose .kml file(s).'; return; }
+    try{
+      const files=await Promise.all(kmls.map(async f=>({name:f.name,text:await f.text()})));
+      launch(buildTrackData(files));
+    }catch(e){ err.textContent='Could not read those files: '+e.message; }
+  }
+  fileInput.onchange=()=>handleFiles(fileInput.files);
+  drop.addEventListener('click',()=>fileInput.click());
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('hot');}));
+  ['dragleave','dragend'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('hot');}));
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');handleFiles(e.dataTransfer.files);});
+})();
+
+// ============================================================
+// Viewer \u2014 starts once data (demo or uploaded) is ready
+// ============================================================
+function startViewer(DATA){
+
+// subtitle from the data's epoch date
+try{
+  const d=new Date(Date.parse(DATA.epoch));
+  const MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('subt').textContent=
+    `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()} \u00b7 BFM DEBRIEF`;
+}catch(e){}
+
+// ---------- constants ----------
+const M2FT=3.280839895, MS2KT=1.943844, FT2M=0.3048;
+const SCALE=0.02;                 // 1 world unit = 50 m (horizontal)
+const VXbase=()=>state.vx;        // vertical exaggeration multiplier
+const COL=[0x39d6ff,0xff7a2f];
+
+// ---------- scene ----------
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x070b10);
+scene.fog=new THREE.FogExp2(0x070b10,0.000035/SCALE*0.02);
+
+const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,1,200000);
+scene.add(new THREE.AmbientLight(0x8fb4cc,0.9));
+const dl=new THREE.DirectionalLight(0xffffff,0.6); dl.position.set(1,2,1); scene.add(dl);
+
+// ---------- build tracks ----------
+// pts: [E(m), Up(m), N(m), sec]
+const tracks=DATA.tracks.map((t,i)=>{
+  const P=t.pts;
+  // precompute speed (kt) & vs(fpm) & turn-rate proxy(g) per sample
+  const der=new Array(P.length).fill(null).map(()=>({gs:0,vs:0,g:0}));
+  for(let k=1;k<P.length;k++){
+    const a=P[k-1],b=P[k]; const dt=Math.max(b[3]-a[3],0.5);
+    const de=b[0]-a[0], dn=b[2]-a[2], du=b[1]-a[1];
+    const horiz=Math.hypot(de,dn);
+    der[k].gs=(horiz/dt)*MS2KT;
+    der[k].vs=(du/dt)*M2FT*60;
+  }
+  // turn g from horizontal velocity heading change
+  for(let k=2;k<P.length;k++){
+    const a=P[k-2],b=P[k-1],c=P[k];
+    const v1=Math.atan2(b[2]-a[2],b[0]-a[0]);
+    const v2=Math.atan2(c[2]-b[2],c[0]-b[0]);
+    let dpsi=v2-v1; while(dpsi>Math.PI)dpsi-=2*Math.PI; while(dpsi<-Math.PI)dpsi+=2*Math.PI;
+    const dt=Math.max(c[3]-a[3],1);
+    const spd=der[k].gs/MS2KT;            // m/s
+    const turnrate=Math.abs(dpsi)/dt;     // rad/s
+    const aLat=spd*turnrate;              // m/s^2 horizontal
+    der[k].g=Math.hypot(aLat,9.81)/9.81;  // approx total load incl 1g
+  }
+  return {meta:t,P,der,col:COL[i],
+    line:null,curtain:null,shadow:null,trail:null,marker:null,vis:true};
+});
+
+const group=new THREE.Group(); scene.add(group);
+
+function worldPos(p){ return new THREE.Vector3(p[0]*SCALE, p[1]*SCALE*state.vx, -p[2]*SCALE); }
+
+// ---------- T-45 low-poly model (nose = +Z, right wing = +X, up = +Y) ----------
+function buildPlane(color){
+  const g=new THREE.Group();
+  const skin=new THREE.MeshStandardMaterial({color:color,metalness:0.25,roughness:0.55,flatShading:true});
+  const surf=new THREE.MeshStandardMaterial({color:color,metalness:0.25,roughness:0.55,side:THREE.DoubleSide,flatShading:true});
+  const glass=new THREE.MeshStandardMaterial({color:0x0a0f15,metalness:0.4,roughness:0.25});
+  // fuselage + nose + tail boom
+  const fus=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.08,1.05,12),skin);
+  fus.rotation.x=Math.PI/2; g.add(fus);
+  const nose=new THREE.Mesh(new THREE.ConeGeometry(0.055,0.4,12),skin);
+  nose.rotation.x=Math.PI/2; nose.position.z=0.72; g.add(nose);
+  const boom=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.42,12),skin);
+  boom.rotation.x=-Math.PI/2; boom.position.z=-0.7; g.add(boom);
+  // canopy
+  const can=new THREE.Mesh(new THREE.SphereGeometry(0.07,12,10),glass);
+  can.scale.set(0.85,0.7,1.9); can.position.set(0,0.055,0.27); g.add(can);
+  // helper: flat surface from triangles
+  function surfMesh(verts){const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
+    geo.computeVertexNormals(); return new THREE.Mesh(geo,surf);}
+  // swept wings (low-mounted, slight anhedral by y=-0.02)
+  const wy=-0.02;
+  g.add(surfMesh([
+     0.06,wy,0.16,  0.06,wy,-0.22,  0.96,wy,-0.46,
+     0.06,wy,0.16,  0.96,wy,-0.46,  0.9,wy,-0.2,
+    -0.06,wy,0.16, -0.96,wy,-0.46, -0.06,wy,-0.22,
+    -0.06,wy,0.16, -0.9,wy,-0.2,   -0.96,wy,-0.46 ]));
+  // horizontal stabilizers
+  g.add(surfMesh([
+     0.05,0,-0.58,  0.05,0,-0.78,  0.42,0,-0.84,
+    -0.05,0,-0.58, -0.42,0,-0.84, -0.05,0,-0.78 ]));
+  // vertical tail (x=0 plane, swept)
+  g.add(surfMesh([ 0,0.03,-0.5, 0,0.03,-0.82, 0.01,0.46,-0.8 ]));
+  g.scale.setScalar(1.15);
+  return g;
+}
+
+function rebuildGeometry(){
+  // (re)build everything affected by vertical exaggeration
+  tracks.forEach((tk)=>{
+    const P=tk.P;
+    // full line
+    if(tk.line){group.remove(tk.line);tk.line.geometry.dispose();}
+    const pos=new Float32Array(P.length*3);
+    for(let k=0;k<P.length;k++){const w=worldPos(P[k]);pos[k*3]=w.x;pos[k*3+1]=w.y;pos[k*3+2]=w.z;}
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    tk.line=new THREE.Line(g,new THREE.LineBasicMaterial({color:tk.col,transparent:true,opacity:0.55}));
+    tk.line.frustumCulled=false; group.add(tk.line);
+
+    // curtain (extrude to ground)
+    if(tk.curtain){group.remove(tk.curtain);tk.curtain.geometry.dispose();}
+    const cv=new Float32Array((P.length-1)*6*3);
+    for(let k=0;k<P.length-1;k++){
+      const a=worldPos(P[k]),b=worldPos(P[k+1]);
+      const a0=new THREE.Vector3(a.x,0,a.z), b0=new THREE.Vector3(b.x,0,b.z);
+      const o=k*18;
+      const tri=[a,b,b0, a,b0,a0];
+      for(let j=0;j<6;j++){cv[o+j*3]=tri[j].x;cv[o+j*3+1]=tri[j].y;cv[o+j*3+2]=tri[j].z;}
+    }
+    const cg=new THREE.BufferGeometry();
+    cg.setAttribute('position',new THREE.BufferAttribute(cv,3));
+    tk.curtain=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({color:tk.col,transparent:true,
+      opacity:0.07,side:THREE.DoubleSide,depthWrite:false}));
+    tk.curtain.frustumCulled=false; group.add(tk.curtain);
+
+    // ground shadow
+    if(tk.shadow){group.remove(tk.shadow);tk.shadow.geometry.dispose();}
+    const sp=new Float32Array(P.length*3);
+    for(let k=0;k<P.length;k++){sp[k*3]=P[k][0]*SCALE;sp[k*3+1]=0;sp[k*3+2]=-P[k][2]*SCALE;}
+    const sg=new THREE.BufferGeometry();
+    sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+    tk.shadow=new THREE.Line(sg,new THREE.LineBasicMaterial({color:tk.col,transparent:true,opacity:0.18}));
+    tk.shadow.frustumCulled=false; group.add(tk.shadow);
+
+    // trail (dynamic)
+    if(!tk.trail){
+      const tg=new THREE.BufferGeometry();
+      tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(4000*3),3));
+      tk.trail=new THREE.Line(tg,new THREE.LineBasicMaterial({color:tk.col,linewidth:2}));
+      tk.trail.frustumCulled=false; group.add(tk.trail);
+    }
+    // marker (T-45 model + billboard locator ring)
+    if(!tk.marker){
+      const m=new THREE.Group();
+      const plane=buildPlane(tk.col);
+      const halo=new THREE.Mesh(new THREE.RingGeometry(0.8,0.92,28),
+        new THREE.MeshBasicMaterial({color:tk.col,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}));
+      m.add(plane); m.add(halo);
+      tk.marker=m; tk.plane=plane; tk.halo=halo; group.add(m);
+    }
+    applyVis(tk);
+  });
+  buildRangeVec();
+}
+
+function applyVis(tk){
+  tk.line.visible=tk.vis;
+  tk.curtain.visible=tk.vis&&state.curtain;
+  tk.shadow.visible=tk.vis&&state.shadow;
+}
+
+// range vector line between jets
+let rangeLine;
+function buildRangeVec(){
+  if(rangeLine){scene.remove(rangeLine);rangeLine.geometry.dispose();}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+  rangeLine=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x9ad84a,transparent:true,opacity:0.8}));
+  rangeLine.frustumCulled=false; scene.add(rangeLine);
+}
+
+// ---------- ground grid ----------
+let grid;
+function buildGrid(){
+  const ext=4000; // world units
+  grid=new THREE.GridHelper(ext, 40, 0x16303f, 0x0e2230);
+  grid.material.transparent=true; grid.material.opacity=0.6;
+  scene.add(grid);
+}
+buildGrid();
+
+// ---------- interpolation ----------
+// first point index with time >= target
+function lb(P,time){let lo=0,hi=P.length;while(lo<hi){const m=(lo+hi)>>1;if(P[m][3]<time)lo=m+1;else hi=m;}return lo;}
+
+function sampleAt(tk,sec){
+  const P=tk.P;
+  if(sec<P[0][3]||sec>P[P.length-1][3]) return null;
+  // binary search
+  let lo=0,hi=P.length-1;
+  while(hi-lo>1){const m=(lo+hi)>>1; if(P[m][3]<=sec)lo=m;else hi=m;}
+  const a=P[lo],b=P[hi];
+  const f=(sec-a[3])/Math.max(b[3]-a[3],1e-6);
+  const e=a[0]+(b[0]-a[0])*f, u=a[1]+(b[1]-a[1])*f, n=a[2]+(b[2]-a[2])*f;
+  // nearest derived
+  const d=f<0.5?tk.der[lo]:tk.der[hi];
+  return {e,u,n,idx:hi,alt_ft:u*M2FT,gs:d.gs,vs:d.vs,g:d.g};
+}
+
+// ---------- state & time ----------
+const TMAX=DATA.tmax;
+const state={t:0,playing:false,speed:2,vx:2.5,
+  curtain:true,rangevec:true,traces:false,shadow:false,grid:true,
+  trail:60,view:'free'};
+
+// find merge (min separation) time
+let mergeT=0,mergeSep=1e9;
+const hasPair=tracks.length>=2;
+if(hasPair)(function(){
+  for(let s=0;s<=TMAX;s+=2){
+    const a=sampleAt(tracks[0],s),b=sampleAt(tracks[1],s);
+    if(a&&b){const d=Math.hypot(a.e-b.e,a.u-b.u,a.n-b.n);
+      if(d<mergeSep){mergeSep=d;mergeT=s;}}
+  }
+})();
+
+// ---------- orbit camera (custom, touch+mouse) ----------
+const orbit={tgt:new THREE.Vector3(0,300*SCALE,0),
+  r:2600,theta:0.9,phi:1.05};
+function updateCam(){
+  if(state.view==='god'){orbit.phi=0.001;}
+  const r=orbit.r;
+  const x=orbit.tgt.x+r*Math.sin(orbit.phi)*Math.cos(orbit.theta);
+  const y=orbit.tgt.y+r*Math.cos(orbit.phi);
+  const z=orbit.tgt.z+r*Math.sin(orbit.phi)*Math.sin(orbit.theta);
+  camera.position.set(x,Math.max(y,5),z);
+  camera.lookAt(orbit.tgt);
+}
+let drag=null;
+function onDown(x,y){drag={x,y,th:orbit.theta,ph:orbit.phi};state.view='free';markView();}
+function onMove(x,y){if(!drag)return;
+  orbit.theta=drag.th+(x-drag.x)*0.005;
+  orbit.phi=Math.min(Math.max(drag.ph-(y-drag.y)*0.005,0.05),Math.PI/2-0.02);}
+function onUp(){drag=null;}
+const cv=renderer.domElement;
+cv.addEventListener('mousedown',e=>onDown(e.clientX,e.clientY));
+addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+addEventListener('mouseup',onUp);
+cv.addEventListener('wheel',e=>{e.preventDefault();orbit.r=Math.min(Math.max(orbit.r*(1+Math.sign(e.deltaY)*0.08),40),9000);},{passive:false});
+let pinch=null;
+cv.addEventListener('touchstart',e=>{
+  if(e.touches.length===1)onDown(e.touches[0].clientX,e.touches[0].clientY);
+  else if(e.touches.length===2){pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);drag=null;}
+},{passive:true});
+cv.addEventListener('touchmove',e=>{
+  if(e.touches.length===1&&drag)onMove(e.touches[0].clientX,e.touches[0].clientY);
+  else if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    orbit.r=Math.min(Math.max(orbit.r*(pinch/d),40),9000);pinch=d;}
+},{passive:true});
+cv.addEventListener('touchend',()=>{onUp();pinch=null;});
+
+// ---------- UI ----------
+const $=s=>document.querySelector(s);
+const playBtn=$('#play');
+playBtn.onclick=()=>{state.playing=!state.playing;playBtn.textContent=state.playing?'PAUSE':'PLAY';
+  playBtn.classList.toggle('on',state.playing);};
+$('#rew').onclick=()=>{state.t=0;};
+$('#merge').onclick=()=>{state.t=mergeT;};
+document.querySelectorAll('#spd button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#spd button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');state.speed=+b.dataset.s;});
+
+$('#gear').onclick=()=>$('#panel').classList.toggle('open');
+document.querySelectorAll('.sw').forEach(sw=>sw.onclick=()=>{
+  const k=sw.dataset.t; state[k]=!state[k]; sw.classList.toggle('on',state[k]);
+  if(k==='grid')grid.visible=state[k];
+  tracks.forEach(applyVis);
+  rangeLine.visible=state.rangevec;
+});
+$('#vx').oninput=e=>{state.vx=+e.target.value;$('#vxv').textContent=state.vx+'×';rebuildGeometry();};
+$('#trail').oninput=e=>{state.trail=+e.target.value;$('#trailv').textContent=state.trail?state.trail+' s':'off';};
+
+const viewBtns=document.querySelectorAll('#views button');
+viewBtns.forEach(b=>b.onclick=()=>{state.view=b.dataset.v;markView();});
+function markView(){viewBtns.forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));}
+
+// zoom buttons (tap = step, hold = continuous)
+function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
+function holdZoom(btn,f){
+  let iv=null;
+  const start=e=>{e.preventDefault();zoomBy(f);iv=setInterval(()=>zoomBy(f),90);};
+  const stop=()=>{if(iv){clearInterval(iv);iv=null;}};
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('touchstart',start,{passive:false});
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>btn.addEventListener(ev,stop));
+}
+holdZoom($('#zin'),0.9);
+holdZoom($('#zout'),1.0/0.9);
+
+// hold-to-rewind: scrub backward while pressed
+(function(){
+  const btn=$('#rewind'); let raf=null,last=0;
+  const step=now=>{const dt=(now-last)/1000;last=now;
+    state.t=Math.max(0,state.t-dt*state.speed*3);
+    raf=requestAnimationFrame(step);};
+  const start=e=>{e.preventDefault();state.playing=false;
+    playBtn.textContent='PLAY';playBtn.classList.remove('on');
+    btn.classList.add('on');last=performance.now();raf=requestAnimationFrame(step);};
+  const stop=()=>{if(raf){cancelAnimationFrame(raf);raf=null;}btn.classList.remove('on');};
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('touchstart',start,{passive:false});
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>btn.addEventListener(ev,stop));
+})();
+
+// scrub
+const scrub=$('#scrub');
+function scrubTo(clientX){const r=scrub.getBoundingClientRect();
+  state.t=Math.min(Math.max((clientX-r.left)/r.width,0),1)*TMAX;}
+let scrubbing=false;
+scrub.addEventListener('mousedown',e=>{scrubbing=true;scrubTo(e.clientX);});
+addEventListener('mousemove',e=>{if(scrubbing)scrubTo(e.clientX);});
+addEventListener('mouseup',()=>scrubbing=false);
+scrub.addEventListener('touchstart',e=>{scrubbing=true;scrubTo(e.touches[0].clientX);},{passive:true});
+scrub.addEventListener('touchmove',e=>{if(scrubbing)scrubTo(e.touches[0].clientX);},{passive:true});
+scrub.addEventListener('touchend',()=>scrubbing=false);
+
+// activity bands + merge tick
+(function(){
+  const w=scrub.clientWidth||innerWidth-24;
+  tracks.forEach((tk,i)=>{
+    const b=document.getElementById('b'+(i+1));
+    if(!b)return;
+    const s=tk.P[0][3]/TMAX, e=tk.P[tk.P.length-1][3]/TMAX;
+    b.style.left=(s*100)+'%'; b.style.width=((e-s)*100)+'%';
+  });
+  if(hasPair){const hot=$('#hot'); hot.style.left=(mergeT/TMAX*100)+'%'; hot.style.display='block';}
+})();
+
+// hide hint after a bit
+setTimeout(()=>{const h=$('#hint');h.style.transition='opacity 1s';h.style.opacity=0;},5000);
+
+// ---------- formatting ----------
+function hhmmss(sec){const t=new Date((Date.parse(DATA.epoch)+sec*1000));
+  return String(t.getUTCHours()).padStart(2,'0')+':'+String(t.getUTCMinutes()).padStart(2,'0')+':'+String(t.getUTCSeconds()).padStart(2,'0')+'Z';}
+function mmss(sec){sec=Math.max(0,Math.round(sec));const m=Math.floor(sec/60);return 'T+'+String(m).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
+function dur(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=Math.round(sec%60);
+  return (h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(s).padStart(2,'0');}
+
+const readEls=[
+  {alt:$('#rd1 [data-f=alt]'),gs:$('#rd1 [data-f=gs]'),vs:$('#rd1 [data-f=vs]'),g:$('#rd1 [data-f=g]')},
+  {alt:$('#rd2 [data-f=alt]'),gs:$('#rd2 [data-f=gs]'),vs:$('#rd2 [data-f=vs]'),g:$('#rd2 [data-f=g]')},
+];
+
+// ---------- main loop ----------
+let prevSep=null, prevT=null, last=performance.now();
+function frame(now){
+  const dt=(now-last)/1000; last=now;
+  if(state.playing && !scrubbing){state.t+=dt*state.speed;
+    if(state.t>TMAX){state.t=TMAX;state.playing=false;playBtn.textContent='PLAY';playBtn.classList.remove('on');}}
+
+  const s1=sampleAt(tracks[0],state.t), s2=tracks[1]?sampleAt(tracks[1],state.t):null;
+  const samp=[s1,s2];
+
+  // markers + trails + readouts
+  let centroid=new THREE.Vector3(),nC=0;
+  tracks.forEach((tk,i)=>{
+    const s=samp[i];
+    // full traces ON = whole flight; OFF = only flown-so-far (historical)
+    {
+      const P=tk.P; let clipN;
+      if(state.traces) clipN=P.length;
+      else if(state.t<P[0][3]) clipN=0;
+      else if(state.t>=P[P.length-1][3]) clipN=P.length;
+      else clipN=(s?s.idx+1:P.length);
+      tk.line.geometry.setDrawRange(0,clipN);
+      // curtain: full when traces on, else only the trail-length window
+      if(state.traces){
+        tk.curtain.geometry.setDrawRange(0,(P.length-1)*6);
+      } else if(state.trail>0){
+        const tEnd=Math.min(state.t,P[P.length-1][3]);
+        const tStart=Math.max(P[0][3],state.t-state.trail);
+        const segS=Math.max(lb(P,tStart)-1,0);
+        const segE=Math.max(lb(P,tEnd),segS);
+        tk.curtain.geometry.setDrawRange(segS*6,Math.max(segE-segS,0)*6);
+      } else {
+        tk.curtain.geometry.setDrawRange(0,0);
+      }
+    }
+    if(s){
+      tk.marker.visible=true;
+      const w=worldPos([s.e,s.u,s.n]);
+      tk.marker.position.copy(w);
+      // orient whole jet: nose along velocity, banked into the turn
+      const endT=tk.P[tk.P.length-1][3], startT=tk.P[0][3];
+      const sN=sampleAt(tk,Math.min(state.t+1,endT));
+      const sP=sampleAt(tk,Math.max(state.t-1,startT));
+      if(sN){
+        const wN=worldPos([sN.e,sN.u,sN.n]);
+        const fwd=wN.clone().sub(w);
+        if(fwd.lengthSq()>1e-8){
+          fwd.normalize();
+          // 1) put nose (+Z) directly on the velocity vector
+          const q0=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),fwd);
+          // 2) roll so wings are level (kill the arbitrary roll from step 1)
+          const someUp=new THREE.Vector3(0,1,0).applyQuaternion(q0);
+          let levelUp=new THREE.Vector3(0,1,0).addScaledVector(fwd,-fwd.y);
+          if(levelUp.lengthSq()<1e-6) levelUp.set(0,0,-1).addScaledVector(fwd,fwd.z); // near-vertical
+          levelUp.normalize();
+          let phi=Math.atan2(new THREE.Vector3().crossVectors(someUp,levelUp).dot(fwd), someUp.dot(levelUp));
+          // 3) bank into the turn
+          let bank=0;
+          if(sP){
+            const wP=worldPos([sP.e,sP.u,sP.n]);
+            const h1=Math.atan2(wN.x-w.x, -(wN.z-w.z));
+            const h0=Math.atan2(w.x-wP.x, -(w.z-wP.z));
+            let d=h1-h0; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+            bank=Math.max(-1.2,Math.min(1.2,3.2*d));
+          }
+          const qRoll=new THREE.Quaternion().setFromAxisAngle(fwd,phi+bank);
+          tk.plane.quaternion.copy(qRoll).multiply(q0);
+        }
+      }
+      tk.halo.lookAt(camera.position);
+      centroid.add(w);nC++;
+      // readout
+      if(readEls[i]){
+        readEls[i].alt.textContent=Math.round(s.alt_ft).toLocaleString()+' ft';
+        readEls[i].gs.textContent=Math.round(s.gs)+' kt';
+        readEls[i].vs.textContent=(s.vs>=0?'+':'')+Math.round(s.vs/10)*10+' fpm';
+        readEls[i].g.textContent=s.g.toFixed(1)+' g';
+      }
+      // trail
+      if(state.trail>0){
+        const t0=state.t-state.trail, P=tk.P; const arr=tk.trail.geometry.attributes.position.array;
+        let n=0; for(let k=0;k<P.length&&n<4000;k++){if(P[k][3]>=t0&&P[k][3]<=state.t){
+          const wp=worldPos(P[k]);arr[n*3]=wp.x;arr[n*3+1]=wp.y;arr[n*3+2]=wp.z;n++;}}
+        if(n>0){const wp=worldPos([s.e,s.u,s.n]);if(n<4000){arr[n*3]=wp.x;arr[n*3+1]=wp.y;arr[n*3+2]=wp.z;n++;}}
+        tk.trail.geometry.setDrawRange(0,n);
+        tk.trail.geometry.attributes.position.needsUpdate=true;
+        tk.trail.visible=true;
+      } else tk.trail.visible=false;
+    } else {
+      tk.marker.visible=false; tk.trail.visible=false;
+      if(readEls[i])['alt','gs','vs','g'].forEach(f=>readEls[i][f].textContent='—');
+    }
+  });
+
+  // range vector + closure
+  const rngv=$('#rngv'), clov=$('#clov');
+  if(s1&&s2){
+    const de=s1.e-s2.e,du=s1.u-s2.u,dn=s1.n-s2.n;
+    const sep=Math.hypot(de,du,dn);             // meters
+    const ft=sep*M2FT, nm=sep/1852;
+    rngv.textContent = nm>=1 ? nm.toFixed(2)+' nm' : Math.round(ft)+' ft';
+    rngv.classList.toggle('hot',ft<1000);
+    // closure
+    if(prevSep!=null&&prevT!=null){const ddt=state.t-prevT;
+      if(Math.abs(ddt)>1e-3){const clo=((prevSep-sep)/ddt)*MS2KT; // kt, +=closing
+        clov.textContent=(clo>=0?'▼ '+Math.round(clo):'▲ '+Math.round(-clo))+' kt '+(clo>=0?'CLOSING':'OPENING');
+        clov.style.color=clo>=0?'var(--rng)':'var(--dim)';}}
+    prevSep=sep; prevT=state.t;
+    // line
+    const a=worldPos([s1.e,s1.u,s1.n]),b=worldPos([s2.e,s2.u,s2.n]);
+    const arr=rangeLine.geometry.attributes.position.array;
+    arr[0]=a.x;arr[1]=a.y;arr[2]=a.z;arr[3]=b.x;arr[4]=b.y;arr[5]=b.z;
+    rangeLine.geometry.attributes.position.needsUpdate=true;
+    rangeLine.visible=state.rangevec;
+  } else { rngv.textContent='—'; clov.textContent='single-ship'; rangeLine.visible=false; prevSep=null; }
+
+  // camera target / chase
+  if(nC>0)centroid.multiplyScalar(1/nC);
+  if(state.view==='chase1'||state.view==='chase2'){
+    const me=state.view==='chase1'?samp[0]:samp[1];
+    const tgt=state.view==='chase1'?samp[1]:samp[0];
+    if(me){
+      const w=worldPos([me.e,me.u,me.n]);
+      orbit.tgt.lerp(tgt?worldPos([tgt.e,tgt.u,tgt.n]):w,0.2);
+      // place camera behind 'me' looking through to bandit
+      const look=(tgt?worldPos([tgt.e,tgt.u,tgt.n]):w).clone();
+      const dir=w.clone().sub(look).normalize();
+      camera.position.lerp(w.clone().add(dir.multiplyScalar(orbit.r*0.18)).add(new THREE.Vector3(0,orbit.r*0.05,0)),0.15);
+      camera.lookAt(orbit.tgt);
+    }
+  } else if(state.view==='side'){
+    orbit.tgt.lerp(centroid,0.1); orbit.theta=0; orbit.phi=Math.PI/2-0.02; updateCam();
+  } else if(state.view==='god'){
+    orbit.tgt.lerp(centroid,0.1); orbit.phi=0.01; updateCam();
+  } else {
+    orbit.tgt.lerp(centroid,0.06); updateCam();
+  }
+
+  // clock
+  $('#zt').textContent=hhmmss(state.t);
+  $('#elt').textContent=mmss(state.t)+' / '+dur(TMAX)+' · MERGE '+mmss(mergeT).replace('T+','');
+  $('#fill').style.width=(state.t/TMAX*100)+'%';
+  $('#knob').style.left=(state.t/TMAX*100)+'%';
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+
+rebuildGeometry();
+grid.visible=state.grid;
+// initial framing
+orbit.tgt.copy(new THREE.Vector3(0,800*SCALE*state.vx,0));
+orbit.r=2400;
+requestAnimationFrame(frame);
+
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);});
+
+} // end startViewer
+</script>
+</body>
+</html>
