@@ -13,11 +13,13 @@ Usage:
 """
 import base64, os, sys
 
+VERSION = "0.1"          # bump this for each release you send out
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC   = os.path.join(HERE, "index.html")
 THREE = os.path.join(HERE, "vendor", "three.module.min.js")
 DEMO  = os.path.join(HERE, "trackdata.js")
-OUT   = os.path.join(HERE, "bfm-debrief.html")
+OUT   = os.path.join(HERE, f"bfm-debrief-v{VERSION}.html")
 
 CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
 FONT_LINK = ('<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:'
@@ -55,6 +57,10 @@ def main():
                 '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'):
         html = html.replace(tag, "")
     html = html.replace("<head>\n", "<head>\n<!-- self-contained build: no external requests -->\n", 1)
+
+    # 4) Stamp the version into the landing screen and the tab title.
+    html = html.replace('<div id="ver">dev build</div>', f'<div id="ver">v{VERSION}</div>')
+    html = html.replace("<title>BFM Recreation", f"<title>BFM Recreation v{VERSION}", 1)
 
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(html)
