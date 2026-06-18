@@ -614,14 +614,12 @@ function rebuildGeometry(){
       tk.trail=new THREE.Line(tg,new THREE.LineBasicMaterial({color:tk.col,linewidth:2}));
       tk.trail.frustumCulled=false; group.add(tk.trail);
     }
-    // marker (T-45 model + billboard locator ring)
+    // marker (T-45 model)
     if(!tk.marker){
       const m=new THREE.Group();
       const plane=buildPlane(tk.col);
-      const halo=new THREE.Mesh(new THREE.RingGeometry(0.8,0.92,28),
-        new THREE.MeshBasicMaterial({color:tk.col,transparent:true,opacity:0.32,side:THREE.DoubleSide,depthWrite:false}));
-      m.add(plane); m.add(halo);
-      tk.marker=m; tk.plane=plane; tk.halo=halo; group.add(m);
+      m.add(plane);
+      tk.marker=m; tk.plane=plane; group.add(m);
     }
     applyVis(tk);
   });
@@ -904,7 +902,6 @@ function frame(now){
           tk.plane.quaternion.copy(qRoll).multiply(q0);
         }
       }
-      tk.halo.lookAt(camera.position);
       centroid.add(w);nC++;
       // readout
       if(readEls[i]){
