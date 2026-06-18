@@ -46,6 +46,23 @@ python3 convert.py JET1.kml JET2.kml
 
 Writes `trackdata.js` next to the script. Standard library only — no dependencies.
 
+## Shareable offline file (no server, no CDN)
+
+If hosting is blocked (e.g. locked-down/managed devices) you can hand someone a single
+self-contained HTML file that works with **zero network requests** — opened straight from
+the Files app, an email attachment, or AirDrop, with no internet at all. Users can still
+drop in their own KML files.
+
+```bash
+python3 build_standalone.py     # -> bfm-debrief.html (~1 MB, everything inlined)
+```
+
+It inlines Three.js (vendored in `vendor/`) and the demo data, and strips the web-font
+links (falls back to system fonts offline). Just share `bfm-debrief.html` directly.
+
+> Requires Safari 16.4+ / a 2023-or-newer browser (it uses an import map). Older browsers
+> won't run it even though the file is local.
+
 ## Deploy
 
 It's a static site. Any static host works (GitHub Pages, Netlify, Cloudflare Pages, S3).
