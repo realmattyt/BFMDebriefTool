@@ -137,16 +137,30 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 #landing .brand{font:700 22px/1 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase}
 #landing .tag{font-size:11px;color:var(--dim);letter-spacing:.12em;margin-top:9px;
   max-width:440px;line-height:1.6}
-#drop{width:min(440px,90vw);border:1.5px dashed #2c4456;border-radius:14px;
-  background:#0a121bcc;padding:32px 24px;cursor:pointer;
-  transition:border-color .15s,background .15s}
-#drop.hot{border-color:var(--hud);background:#0e1c22}
-#drop .big{font:700 13px 'Chakra Petch';letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
-#drop .small{font-size:11px;color:var(--dim);margin-top:9px;line-height:1.5}
+/* per-jet upload cards */
+#jets{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.jetcard{width:min(290px,90vw);background:#0a121bcc;border:1px solid var(--line);
+  border-top:3px solid var(--jc,#39d6ff);border-radius:12px;padding:14px;text-align:left}
+.jetcard .hd{font:700 10px 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:8px}
+.jetname{width:100%;background:#0e1620;border:1px solid var(--line);border-radius:7px;color:var(--ink);
+  font-family:'Chakra Petch';font-size:15px;font-weight:600;padding:8px 10px;letter-spacing:.04em}
+.jetname:focus{outline:none;border-color:#2c6f82}
+.swatches{display:flex;gap:7px;margin:11px 0 12px}
+.sw2{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex:none}
+.sw2.sel{border-color:#fff;box-shadow:0 0 0 1px #05080c,0 0 8px currentColor}
+.pick{width:100%}
+.fname{font-size:11px;color:var(--dim);margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fname.has{color:var(--hud)}
 #landing .or{font-size:10px;color:var(--faint);letter-spacing:.22em}
-#demoBtn{font-family:'Chakra Petch';font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+#buildBtn{font-family:'Chakra Petch';font-size:13px;letter-spacing:.08em;text-transform:uppercase;
   color:#04140d;background:var(--hud);border:1px solid var(--hud);border-radius:7px;
-  padding:11px 20px;cursor:pointer;font-weight:700}
+  padding:12px 26px;cursor:pointer;font-weight:700}
+#buildBtn:disabled{opacity:.35;cursor:not-allowed}
+#demoBtn{font-family:'Chakra Petch';font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink);background:#0e1620;border:1px solid var(--line);border-radius:7px;
+  padding:10px 20px;cursor:pointer;font-weight:600}
+#demoBtn:hover{border-color:#2f4456}
 #lerr{color:var(--warn);font-size:11px;min-height:14px;letter-spacing:.04em}
 #ver{position:fixed;bottom:14px;right:16px;font-size:10px;color:var(--faint);letter-spacing:.12em}
 
@@ -165,14 +179,28 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 <div id="landing">
   <div>
     <div class="brand">BFM Recreation</div>
-    <div class="tag">3D dogfight debrief built from your ForeFlight track logs.
-      Drop the aircraft KML exports below — typically two, one per jet — to fly the merge.</div>
+    <div class="tag">3D dogfight debrief from your ForeFlight track logs. Add each jet's KML
+      separately — they can be in different folders. Everything runs on your device; nothing is uploaded.</div>
   </div>
-  <div id="drop">
-    <div class="big">Drop KML files here</div>
-    <div class="small">or click to choose · everything runs in your browser, nothing is uploaded</div>
+  <div id="jets">
+    <div class="jetcard" data-i="0">
+      <div class="hd">Jet 1</div>
+      <input class="jetname" type="text" value="Fighter" maxlength="20" spellcheck="false" autocapitalize="words">
+      <div class="swatches"></div>
+      <input type="file" class="kml" accept=".kml,application/vnd.google-earth.kml+xml" hidden>
+      <button class="pick">Choose KML file</button>
+      <div class="fname">No file chosen</div>
+    </div>
+    <div class="jetcard" data-i="1">
+      <div class="hd">Jet 2</div>
+      <input class="jetname" type="text" value="Bandit" maxlength="20" spellcheck="false" autocapitalize="words">
+      <div class="swatches"></div>
+      <input type="file" class="kml" accept=".kml,application/vnd.google-earth.kml+xml" hidden>
+      <button class="pick">Choose KML file</button>
+      <div class="fname">No file chosen</div>
+    </div>
   </div>
-  <input id="fileInput" type="file" accept=".kml,application/vnd.google-earth.kml+xml" multiple hidden>
+  <button id="buildBtn" disabled>Build replay</button>
   <div class="or">— or —</div>
   <button id="demoBtn">▶ View demo flight</button>
   <div id="lerr"></div>
@@ -283,6 +311,8 @@ import * as THREE from 'three';
 //   Each sample is [E, Up, North, t_seconds_since_shared_epoch].
 // ============================================================
 const round1=x=>Math.round(x*10)/10;
+// jet color palette (Fighter defaults to blue, Bandit to orange)
+const PALETTE=['#39d6ff','#ff7a2f','#9ad84a','#ff3b54','#ffd23b','#c77dff'];
 
 function parseKML(text){
   const xml=new DOMParser().parseFromString(text,'application/xml');
@@ -314,7 +344,7 @@ function buildTrackData(files){
   const parsed=files.map(f=>{
     const {whens,coords}=parseKML(f.text);
     if(!whens.length) throw new Error(`${f.name}: no <when> timestamps`);
-    return {name:f.name, whens, coords, t0:secEpoch(whens[0])};
+    return {name:f.name, whens, coords, t0:secEpoch(whens[0]), label:f.label, color:f.color};
   });
   const epochMs=Math.min(...parsed.map(p=>p.t0));
   let sumLat=0,sumLon=0,n=0;
@@ -333,7 +363,8 @@ function buildTrackData(files){
       if(sec>tmax)tmax=sec;
     }
     out.tracks.push({
-      label:`JET ${i+1}`,
+      label:p.label || `JET ${i+1}`,
+      color:p.color || PALETTE[i] || PALETTE[0],
       tail:tailOf(p.name),
       start:Math.round((p.t0-epochMs)/1000),
       maxalt_ft:Math.round(Math.max(...p.coords.map(c=>c[2]))*3.280839895),
@@ -349,10 +380,10 @@ function buildTrackData(files){
 // ============================================================
 (function(){
   const landing=document.getElementById('landing');
-  const fileInput=document.getElementById('fileInput');
-  const drop=document.getElementById('drop');
   const demoBtn=document.getElementById('demoBtn');
+  const buildBtn=document.getElementById('buildBtn');
   const err=document.getElementById('lerr');
+  const cards=[...document.querySelectorAll('.jetcard')];
 
   let launched=false;
   function launch(data){
@@ -361,6 +392,43 @@ function buildTrackData(files){
     landing.style.display='none';
     startViewer(data);
   }
+
+  // per-jet cards: name field, color swatches, and an independent file picker
+  cards.forEach((card,ci)=>{
+    card.dataset.color = PALETTE[ci] || PALETTE[0];
+    card.style.setProperty('--jc', card.dataset.color);
+    const host=card.querySelector('.swatches');
+    PALETTE.forEach(hex=>{
+      const s=document.createElement('div');
+      s.className='sw2'+(hex===card.dataset.color?' sel':'');
+      s.style.background=hex; s.style.color=hex;
+      s.onclick=()=>{ card.dataset.color=hex; card.style.setProperty('--jc',hex);
+        host.querySelectorAll('.sw2').forEach(x=>x.classList.toggle('sel',x===s)); };
+      host.appendChild(s);
+    });
+    const fileIn=card.querySelector('.kml'), fname=card.querySelector('.fname');
+    card.querySelector('.pick').onclick=()=>fileIn.click();
+    fileIn.onchange=()=>{
+      const f=fileIn.files[0]; if(!f) return;
+      card._file=f; fname.textContent=f.name; fname.classList.add('has');
+      buildBtn.disabled = !cards.some(c=>c._file);
+    };
+  });
+
+  buildBtn.onclick=async()=>{
+    err.textContent='';
+    const jets=cards.filter(c=>c._file).map(c=>{
+      const inp=c.querySelector('.jetname');
+      return {label:(inp.value.trim()||inp.defaultValue), color:c.dataset.color, file:c._file};
+    });
+    if(!jets.length){ err.textContent='Choose at least one KML file.'; return; }
+    try{
+      const files=await Promise.all(jets.map(async j=>
+        ({name:j.file.name, text:await j.file.text(), label:j.label, color:j.color})));
+      launch(buildTrackData(files));
+    }catch(e){ err.textContent='Could not read those files: '+e.message; }
+  };
+
   // load demo data on demand with a cache-buster so it's always the latest
   demoBtn.onclick=()=>{
     if(window.TRACK_DATA){ launch(window.TRACK_DATA); return; }
@@ -372,21 +440,6 @@ function buildTrackData(files){
     s.onerror=()=>{ err.textContent='Demo data failed to load.'; };
     document.head.appendChild(s);
   };
-
-  async function handleFiles(list){
-    err.textContent='';
-    const kmls=[...list].filter(f=>/\.kml$/i.test(f.name));
-    if(!kmls.length){ err.textContent='Please choose .kml file(s).'; return; }
-    try{
-      const files=await Promise.all(kmls.map(async f=>({name:f.name,text:await f.text()})));
-      launch(buildTrackData(files));
-    }catch(e){ err.textContent='Could not read those files: '+e.message; }
-  }
-  fileInput.onchange=()=>handleFiles(fileInput.files);
-  drop.addEventListener('click',()=>fileInput.click());
-  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('hot');}));
-  ['dragleave','dragend'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('hot');}));
-  drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');handleFiles(e.dataTransfer.files);});
 })();
 
 // ============================================================
@@ -406,7 +459,7 @@ try{
 const M2FT=3.280839895, MS2KT=1.943844, FT2M=0.3048;
 const SCALE=0.02;                 // 1 world unit = 50 m (horizontal)
 const VXbase=()=>state.vx;        // vertical exaggeration multiplier
-const COL=[0x39d6ff,0xff7a2f];
+const COL=['#39d6ff','#ff7a2f'];   // fallback colors when data has none
 
 // ---------- scene ----------
 const stage=document.getElementById('stage');
@@ -447,9 +500,17 @@ const tracks=DATA.tracks.map((t,i)=>{
     const aLat=spd*turnrate;              // m/s^2 horizontal
     der[k].g=Math.hypot(aLat,9.81)/9.81;  // approx total load incl 1g
   }
-  return {meta:t,P,der,col:COL[i],
+  return {meta:t,P,der,col:t.color||COL[i]||COL[0],
     line:null,curtain:null,shadow:null,trail:null,marker:null,vis:true};
 });
+
+// label each readout panel with the jet's name + color (from the data)
+tracks.forEach((tk,i)=>{
+  const rd=document.getElementById('rd'+(i+1)); if(!rd) return;
+  const nm=rd.querySelector('.nm span:last-child'); if(nm) nm.textContent=tk.meta.label;
+  const dot=rd.querySelector('.dot'); if(dot) dot.style.color=tk.col;
+});
+if(tracks.length<2){ const rd2=document.getElementById('rd2'); if(rd2) rd2.style.display='none'; }
 
 const group=new THREE.Group(); scene.add(group);
 
@@ -728,6 +789,7 @@ scrub.addEventListener('touchend',()=>scrubbing=false);
   tracks.forEach((tk,i)=>{
     const b=document.getElementById('b'+(i+1));
     if(!b)return;
+    b.style.background=tk.col;
     const s=tk.P[0][3]/TMAX, e=tk.P[tk.P.length-1][3]/TMAX;
     b.style.left=(s*100)+'%'; b.style.width=((e-s)*100)+'%';
   });
