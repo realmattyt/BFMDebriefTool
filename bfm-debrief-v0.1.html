@@ -313,7 +313,7 @@ import * as THREE from 'three';
 // ============================================================
 const round1=x=>Math.round(x*10)/10;
 // jet color palette (Fighter defaults to blue, Bandit to orange)
-const PALETTE=['#39d6ff','#ff7a2f','#9ad84a','#ff3b54','#ffd23b','#c77dff'];
+const PALETTE=['#39d6ff','#ff3b54','#ff7a2f','#9ad84a','#ffd23b','#c77dff'];
 
 function parseKML(text){
   const xml=new DOMParser().parseFromString(text,'application/xml');
@@ -460,7 +460,7 @@ try{
 const M2FT=3.280839895, MS2KT=1.943844, FT2M=0.3048;
 const SCALE=0.02;                 // 1 world unit = 50 m (horizontal)
 const VXbase=()=>state.vx;        // vertical exaggeration multiplier
-const COL=['#39d6ff','#ff7a2f'];   // fallback colors when data has none
+const COL=['#39d6ff','#ff3b54'];   // fallback colors when data has none (Fighter blue, Bandit red)
 
 // ---------- scene ----------
 const stage=document.getElementById('stage');
@@ -642,12 +642,17 @@ function buildRangeVec(){
   rangeLine.frustumCulled=false; scene.add(rangeLine);
 }
 
-// ---------- ground grid ----------
+// ---------- ground (brownish-green terrain + grid) ----------
 let grid;
 function buildGrid(){
   const ext=4000; // world units
-  grid=new THREE.GridHelper(ext, 40, 0x16303f, 0x0e2230);
-  grid.material.transparent=true; grid.material.opacity=0.6;
+  // filled ground plane just below the grid
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(ext*2,ext*2),
+    new THREE.MeshStandardMaterial({color:0x434a26,roughness:1,metalness:0}));
+  ground.rotation.x=-Math.PI/2; ground.position.y=-1; scene.add(ground);
+  // grid lines on top, tinted to match
+  grid=new THREE.GridHelper(ext, 40, 0x6b7340, 0x394023);
+  grid.material.transparent=true; grid.material.opacity=0.5;
   scene.add(grid);
 }
 buildGrid();
