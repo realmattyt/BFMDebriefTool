@@ -115,8 +115,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 #panel input[type=range]{width:100%;margin-top:6px;accent-color:var(--hud)}
 .vx{font-size:11px;display:flex;justify-content:space-between}
 
-/* camera-view dropdown (lives in header) */
-#views{position:absolute;top:calc(100% + 6px);right:0;z-index:11;
+/* camera-view dropdown (moved to <body> at runtime; positioned under the button) */
+#views{position:fixed;top:54px;right:12px;z-index:30;
   background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;
   display:none;flex-direction:column;gap:4px;backdrop-filter:blur(10px);min-width:140px}
 #views.open{display:flex}
@@ -735,17 +735,27 @@ document.querySelectorAll('.tgl').forEach(b=>b.onclick=()=>{
 $('#vx').oninput=e=>{state.vx=+e.target.value;$('#vxv').textContent=state.vx+'×';rebuildGeometry();};
 $('#trail').oninput=e=>{state.trail=+e.target.value;$('#trailv').textContent=state.trail?state.trail+' s':'off';};
 
-// camera-view dropdown (header)
-const viewsMenu=$('#views'), viewsBtn=$('#viewsBtn');
-const viewBtns=document.querySelectorAll('#views button');
+// camera-view dropdown (header). Move the menu to <body> so the header's
+// overflow/backdrop-filter can't clip it, and position it under the button.
+const viewsMenu=$('#views'), viewsBtn=$('#viewsBtn'), viewsWrap=$('#viewsWrap');
+document.body.appendChild(viewsMenu);
+const viewBtns=viewsMenu.querySelectorAll('button');
 viewBtns.forEach(b=>b.onclick=()=>{state.view=b.dataset.v;markView();viewsMenu.classList.remove('open');});
 function markView(){
   viewBtns.forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
   const cur=[...viewBtns].find(b=>b.dataset.v===state.view);
   if(cur) viewsBtn.textContent='◳ '+cur.textContent+' ▾';
 }
-viewsBtn.onclick=e=>{e.stopPropagation();viewsMenu.classList.toggle('open');};
-document.addEventListener('click',e=>{if(!$('#viewsWrap').contains(e.target))viewsMenu.classList.remove('open');});
+function placeMenu(){
+  const r=viewsBtn.getBoundingClientRect();
+  viewsMenu.style.top=(r.bottom+6)+'px';
+  viewsMenu.style.right=(innerWidth-r.right)+'px';
+}
+viewsBtn.onclick=e=>{e.stopPropagation();
+  if(!viewsMenu.classList.contains('open')) placeMenu();
+  viewsMenu.classList.toggle('open');};
+document.addEventListener('click',e=>{
+  if(!viewsWrap.contains(e.target) && !viewsMenu.contains(e.target)) viewsMenu.classList.remove('open');});
 
 // zoom buttons (tap = step, hold = continuous)
 function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
