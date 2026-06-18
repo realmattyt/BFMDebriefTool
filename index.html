@@ -852,23 +852,22 @@ function frame(now){
     const s=samp[i];
     // full traces ON = whole flight; OFF = only flown-so-far (historical)
     {
-      const P=tk.P; let clipN;
-      if(state.traces) clipN=P.length;
-      else if(state.t<P[0][3]) clipN=0;
-      else if(state.t>=P[P.length-1][3]) clipN=P.length;
-      else clipN=(s?s.idx+1:P.length);
-      tk.line.geometry.setDrawRange(0,clipN);
-      // curtain: full when traces on, else only the trail-length window
+      // line + curtain share one window so the trace follows the trail length:
+      //  traces ON = whole flight; else trail>0 limits how far back, trail off = full flown-so-far
+      const P=tk.P;
       if(state.traces){
+        tk.line.geometry.setDrawRange(0,P.length);
         tk.curtain.geometry.setDrawRange(0,(P.length-1)*6);
-      } else if(state.trail>0){
+      } else if(state.t<P[0][3]){
+        tk.line.geometry.setDrawRange(0,0);
+        tk.curtain.geometry.setDrawRange(0,0);
+      } else {
         const tEnd=Math.min(state.t,P[P.length-1][3]);
-        const tStart=Math.max(P[0][3],state.t-state.trail);
+        const tStart=state.trail>0?Math.max(P[0][3],state.t-state.trail):P[0][3];
         const segS=Math.max(lb(P,tStart)-1,0);
         const segE=Math.max(lb(P,tEnd),segS);
+        tk.line.geometry.setDrawRange(segS,Math.max(segE-segS+1,1));
         tk.curtain.geometry.setDrawRange(segS*6,Math.max(segE-segS,0)*6);
-      } else {
-        tk.curtain.geometry.setDrawRange(0,0);
       }
     }
     if(s){
