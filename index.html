@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <title>BFM Recreation — 17 Jun 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -238,7 +241,6 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   </div>
 </div>
 
-<script src="trackdata.js"></script>
 <script type="importmap">
 { "imports": {
   "three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
@@ -323,7 +325,6 @@ function buildTrackData(files){
   const drop=document.getElementById('drop');
   const demoBtn=document.getElementById('demoBtn');
   const err=document.getElementById('lerr');
-  if(!window.TRACK_DATA) demoBtn.style.display='none';   // no trackdata.js shipped
 
   let launched=false;
   function launch(data){
@@ -332,7 +333,17 @@ function buildTrackData(files){
     landing.style.display='none';
     startViewer(data);
   }
-  demoBtn.onclick=()=>{ if(window.TRACK_DATA) launch(window.TRACK_DATA); };
+  // load demo data on demand with a cache-buster so it's always the latest
+  demoBtn.onclick=()=>{
+    if(window.TRACK_DATA){ launch(window.TRACK_DATA); return; }
+    err.textContent='Loading demo…';
+    const s=document.createElement('script');
+    s.src='trackdata.js?v='+Date.now();
+    s.onload=()=>{ if(window.TRACK_DATA){ err.textContent=''; launch(window.TRACK_DATA); }
+                   else err.textContent='Demo data failed to load.'; };
+    s.onerror=()=>{ err.textContent='Demo data failed to load.'; };
+    document.head.appendChild(s);
+  };
 
   async function handleFiles(list){
     err.textContent='';
