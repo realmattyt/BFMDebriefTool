@@ -27,13 +27,27 @@ canvas{display:block}
 .up{text-transform:uppercase}
 .dim{color:var(--dim)} .faint{color:var(--faint)}
 
-/* top bar */
-#top{position:fixed;top:0;left:0;right:0;display:flex;gap:0;
+/* header bar */
+#header{position:fixed;top:0;left:0;right:0;z-index:9;display:flex;align-items:center;
+  gap:14px;padding:7px 12px;min-height:46px;
+  background:linear-gradient(180deg,#070b10f7,#070b10d6);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(9px)}
+#brand{flex:none;line-height:1.1}
+#brand h1{font:600 14px/1 'Chakra Petch';letter-spacing:.14em;text-transform:uppercase}
+#brand .sub{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
+#hctrl{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto}
+#hctrl::-webkit-scrollbar{height:0}
+.tgls{display:flex;gap:5px;flex:none}
+.tgl{font-family:'Chakra Petch';font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--dim);background:#0e1620;border:1px solid var(--line);border-radius:6px;
+  padding:7px 9px;cursor:pointer;white-space:nowrap}
+.tgl.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
+#viewsWrap{position:relative;flex:none}
+
+/* top bar (HUD readouts + range), sits below the header */
+#top{position:fixed;top:46px;left:0;right:0;display:flex;gap:0;
   padding:9px 12px;align-items:flex-start;justify-content:space-between;
   background:linear-gradient(180deg,#070b10ee,#070b1000);pointer-events:none;z-index:5}
-#title{pointer-events:none}
-#title h1{font:600 14px/1 'Chakra Petch';letter-spacing:.14em;text-transform:uppercase}
-#title .sub{font-size:10px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
 
 /* range/closure HUD center-top */
 #sep{pointer-events:none;text-align:center;font-family:'Chakra Petch';margin-top:-1px}
@@ -85,8 +99,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 .spd{min-width:40px;text-align:center}
 
 /* settings drawer */
-#gear{position:fixed;top:50px;right:12px;z-index:7;pointer-events:auto}
-#panel{position:fixed;top:84px;right:12px;width:212px;z-index:8;
+#panel{position:fixed;top:54px;right:12px;width:212px;z-index:10;
   background:var(--panel);border:1px solid var(--line);border-radius:9px;
   padding:11px;backdrop-filter:blur(10px);display:none}
 #panel.open{display:block}
@@ -101,8 +114,12 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 #panel input[type=range]{width:100%;margin-top:6px;accent-color:var(--hud)}
 .vx{font-size:11px;display:flex;justify-content:space-between}
 
-#views{position:fixed;left:12px;top:84px;z-index:7;display:flex;flex-direction:column;gap:6px}
-#views button{min-width:84px;text-align:left}
+/* camera-view dropdown (lives in header) */
+#views{position:absolute;top:calc(100% + 6px);right:0;z-index:11;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;
+  display:none;flex-direction:column;gap:4px;backdrop-filter:blur(10px);min-width:140px}
+#views.open{display:flex}
+#views button{text-align:left;white-space:nowrap}
 
 #zoom{position:fixed;right:12px;bottom:148px;z-index:7;display:flex;flex-direction:column;gap:6px}
 #zoom button{width:46px;height:46px;padding:0;font-size:22px;font-weight:600;line-height:1;
@@ -135,8 +152,9 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 @media (max-width:560px){
   .read{min-width:118px;padding:6px 7px}
   #sep .rng{font-size:21px}
-  #views button{min-width:0;padding:7px 8px}
-  #title h1{font-size:12px}
+  #brand .sub{display:none}
+  #brand h1{font-size:12px}
+  .tgl{padding:7px 7px}
 }
 </style>
 </head>
@@ -159,6 +177,30 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <div id="lerr"></div>
 </div>
 
+<div id="header">
+  <div id="brand"><h1>BFM RECREATION</h1><div class="sub" id="subt">17 JUN 2026</div></div>
+  <div id="hctrl">
+    <div class="tgls">
+      <button class="tgl on" data-t="curtain">Curtains</button>
+      <button class="tgl on" data-t="rangevec">Range</button>
+      <button class="tgl" data-t="traces">Traces</button>
+      <button class="tgl" data-t="shadow">Shadows</button>
+      <button class="tgl on" data-t="grid">Grid</button>
+    </div>
+    <div id="viewsWrap">
+      <button id="viewsBtn">◳ Free Orbit ▾</button>
+      <div id="views">
+        <button data-v="god">God's Eye</button>
+        <button data-v="chase1">Chase J1</button>
+        <button data-v="chase2">Chase J2</button>
+        <button data-v="side">Side</button>
+        <button data-v="free" class="on">Free Orbit</button>
+      </div>
+    </div>
+    <button id="gear">⚙</button>
+  </div>
+</div>
+
 <div id="top">
   <div class="read r1" id="rd1">
     <div class="nm"><span class="dot" style="color:var(--j1)"></span><span>JET 1</span></div>
@@ -169,7 +211,6 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   </div>
 
   <div style="display:flex;flex-direction:column;align-items:center">
-    <div id="title"><h1>BFM RECREATION</h1><div class="sub" id="subt">17 JUN 2026 · KNGW WORKING AREA</div></div>
     <div id="sep">
       <div class="rng" id="rngv">—</div>
       <div class="rlbl">SLANT RANGE</div>
@@ -186,28 +227,13 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   </div>
 </div>
 
-<div id="views">
-  <button data-v="god">God's Eye</button>
-  <button data-v="chase1">Chase J1</button>
-  <button data-v="chase2">Chase J2</button>
-  <button data-v="side">Side</button>
-  <button data-v="free" class="on">Free Orbit</button>
-</div>
-
 <div id="zoom">
   <button id="zin" aria-label="Zoom in">+</button>
   <button id="zout" aria-label="Zoom out">−</button>
 </div>
 
-<button id="gear">⚙ Display</button>
 <div id="panel">
-  <h3>Display</h3>
-  <div class="opt"><span>Altitude curtains</span><div class="sw on" data-t="curtain"><i></i></div></div>
-  <div class="opt"><span>Range vector</span><div class="sw on" data-t="rangevec"><i></i></div></div>
-  <div class="opt"><span>Full traces</span><div class="sw" data-t="traces"><i></i></div></div>
-  <div class="opt"><span>Ground shadows</span><div class="sw" data-t="shadow"><i></i></div></div>
-  <div class="opt"><span>Grid</span><div class="sw on" data-t="grid"><i></i></div></div>
-  <h3 style="margin-top:12px">Vertical exaggeration</h3>
+  <h3>Vertical exaggeration</h3>
   <input id="vx" type="range" min="1" max="6" step="0.5" value="2.5">
   <div class="vx"><span class="dim">1×</span><span id="vxv">2.5×</span><span class="dim">6×</span></div>
   <h3 style="margin-top:12px">Trail length</h3>
@@ -371,7 +397,7 @@ try{
   const d=new Date(Date.parse(DATA.epoch));
   const MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   document.getElementById('subt').textContent=
-    `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()} \u00b7 BFM DEBRIEF`;
+    `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }catch(e){}
 
 // ---------- constants ----------
@@ -632,8 +658,9 @@ document.querySelectorAll('#spd button').forEach(b=>b.onclick=()=>{
   b.classList.add('on');state.speed=+b.dataset.s;});
 
 $('#gear').onclick=()=>$('#panel').classList.toggle('open');
-document.querySelectorAll('.sw').forEach(sw=>sw.onclick=()=>{
-  const k=sw.dataset.t; state[k]=!state[k]; sw.classList.toggle('on',state[k]);
+// display toggles (header chips)
+document.querySelectorAll('.tgl').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.t; state[k]=!state[k]; b.classList.toggle('on',state[k]);
   if(k==='grid')grid.visible=state[k];
   tracks.forEach(applyVis);
   rangeLine.visible=state.rangevec;
@@ -641,9 +668,17 @@ document.querySelectorAll('.sw').forEach(sw=>sw.onclick=()=>{
 $('#vx').oninput=e=>{state.vx=+e.target.value;$('#vxv').textContent=state.vx+'×';rebuildGeometry();};
 $('#trail').oninput=e=>{state.trail=+e.target.value;$('#trailv').textContent=state.trail?state.trail+' s':'off';};
 
+// camera-view dropdown (header)
+const viewsMenu=$('#views'), viewsBtn=$('#viewsBtn');
 const viewBtns=document.querySelectorAll('#views button');
-viewBtns.forEach(b=>b.onclick=()=>{state.view=b.dataset.v;markView();});
-function markView(){viewBtns.forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));}
+viewBtns.forEach(b=>b.onclick=()=>{state.view=b.dataset.v;markView();viewsMenu.classList.remove('open');});
+function markView(){
+  viewBtns.forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
+  const cur=[...viewBtns].find(b=>b.dataset.v===state.view);
+  if(cur) viewsBtn.textContent='◳ '+cur.textContent+' ▾';
+}
+viewsBtn.onclick=e=>{e.stopPropagation();viewsMenu.classList.toggle('open');};
+document.addEventListener('click',e=>{if(!$('#viewsWrap').contains(e.target))viewsMenu.classList.remove('open');});
 
 // zoom buttons (tap = step, hold = continuous)
 function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
