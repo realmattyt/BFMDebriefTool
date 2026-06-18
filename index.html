@@ -642,13 +642,13 @@ function buildRangeVec(){
 let grid;
 function buildGrid(){
   const ext=4000; // world units
-  // filled ground plane just below the grid
+  // filled ground plane just below the grid (covers the same area as the grid)
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(ext*2,ext*2),
-    new THREE.MeshStandardMaterial({color:0x434a26,roughness:1,metalness:0}));
+    new THREE.MeshStandardMaterial({color:0x5c6b34,roughness:1,metalness:0}));
   ground.rotation.x=-Math.PI/2; ground.position.y=-1; scene.add(ground);
-  // grid lines on top, tinted to match
-  grid=new THREE.GridHelper(ext, 40, 0x6b7340, 0x394023);
-  grid.material.transparent=true; grid.material.opacity=0.5;
+  // grid lines on top, matched to the ground extent
+  grid=new THREE.GridHelper(ext*2, 80, 0x7d8a4a, 0x434d28);
+  grid.material.transparent=true; grid.material.opacity=0.55;
   scene.add(grid);
 }
 buildGrid();
