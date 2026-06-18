@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>BFM Debrief Tool — Quick Start</title>
+<style>
+  @page { size: letter; margin: 0.7in 0.75in 0.8in; }
+  :root{
+    --ink:#13202b; --dim:#5a7184; --line:#d4dde4;
+    --j1:#0a7fb0; --j2:#d4631a; --accent:#0a7fb0; --bg:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;color:var(--ink);background:var(--bg);
+    font:13px/1.55 -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1,h2,h3{font-weight:700;line-height:1.2}
+
+  /* cover */
+  .cover{height:9.1in;display:flex;flex-direction:column;justify-content:center;
+    page-break-after:always;padding:0 .2in}
+  .cover .kicker{letter-spacing:.28em;text-transform:uppercase;color:var(--accent);font-size:12px;font-weight:700}
+  .cover h1{font-size:42px;margin:.18in 0 .1in}
+  .cover .sub{font-size:16px;color:var(--dim);max-width:5.2in;line-height:1.5}
+  .cover .meta{margin-top:.5in;font-size:12px;color:var(--dim);border-top:2px solid var(--line);padding-top:.16in}
+  .cover .meta b{color:var(--ink)}
+  .rule{height:6px;width:1.4in;background:linear-gradient(90deg,var(--j1),var(--j2));border-radius:3px;margin-top:.22in}
+
+  /* steps */
+  .step{page-break-inside:avoid;margin:0 0 .34in}
+  .step h2{font-size:19px;display:flex;align-items:baseline;gap:.14in;margin:0 0 .06in}
+  .step h2 .n{flex:none;display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:15px;font-weight:700}
+  .step p{margin:.06in 0 .1in}
+  .step ul,.step ol{margin:.04in 0 .12in 0;padding-left:.32in}
+  .step li{margin:.04in 0}
+  .lead{color:var(--dim);font-size:13.5px;margin:-.02in 0 .14in .42in}
+
+  .note{background:#eef6fb;border-left:4px solid var(--accent);padding:.1in .16in;border-radius:0 6px 6px 0;
+    font-size:12px;margin:.12in 0 .12in .42in}
+  .note b{color:var(--accent)}
+  .tip{background:#fff7ee;border-left:4px solid var(--j2)}
+  .tip b{color:var(--j2)}
+
+  /* screenshots */
+  figure{margin:.1in 0 .14in .42in;page-break-inside:avoid}
+  figure img{display:block;width:3.6in;max-width:100%;border:1px solid var(--line);border-radius:8px}
+  /* broken/missing image still reads as a labeled placeholder frame */
+  figure img{min-height:1.6in;background:#f4f7f9}
+  figcaption{font-size:11px;color:var(--dim);margin-top:.05in;font-style:italic}
+  .shot{font-size:11px;color:var(--j2);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:.04in 0 .04in .42in}
+
+  /* controls reference table */
+  table{border-collapse:collapse;width:calc(100% - .42in);margin:.1in 0 .1in .42in;font-size:12px}
+  th,td{border:1px solid var(--line);padding:.07in .1in;text-align:left;vertical-align:top}
+  th{background:#f0f5f8;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+  td b{color:var(--ink)}
+
+  .foot{margin-top:.3in;border-top:1px solid var(--line);padding-top:.12in;font-size:11px;color:var(--dim)}
+  code{background:#eef2f5;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <div class="kicker">Quick Start · iPad</div>
+  <h1>BFM Debrief Tool</h1>
+  <div class="sub">A 3D recreation of your engagement, built from ForeFlight track logs.
+    Watch the merge, scrub the timeline, and study range &amp; closure — right on your iPad.</div>
+  <div class="rule"></div>
+  <div class="meta">
+    Version <b>0.1</b> &nbsp;·&nbsp; Runs entirely on the device — nothing is uploaded.<br>
+    Questions or updated versions: <b>[your name / contact]</b>
+  </div>
+</section>
+
+<!-- ============ STEP 1 ============ -->
+<section class="step">
+  <h2><span class="n">1</span> Install Microsoft Edge (one time)</h2>
+  <div class="lead">The tool is a single web page. iPad won’t run it in Safari from a file, but Microsoft Edge will.</div>
+  <ul>
+    <li>Open your company app catalog (the managed app/“Company Portal” icon).</li>
+    <li>Find <b>Microsoft Edge</b> and install it.</li>
+  </ul>
+  <div class="shot">Screenshot 01</div>
+  <figure><img src="screenshots/01-edge-in-catalog.png" alt="Screenshot 01 — Microsoft Edge shown in the company app catalog, ready to install">
+    <figcaption>The company catalog with Microsoft Edge available to install.</figcaption></figure>
+  <div class="note tip"><b>Why Edge?</b> It’s the one approved app that can both open the local file <i>and</i> let you pick your KML files. You only install it once.</div>
+</section>
+
+<!-- ============ STEP 2 ============ -->
+<section class="step">
+  <h2><span class="n">2</span> Get the tool file</h2>
+  <div class="lead">You’ll receive a single file named like <code>bfm-debrief-v0.1.html</code>.</div>
+  <ul>
+    <li>Open the message/share I sent and <b>save the file to your iPad</b> (Files app).</li>
+    <li>The version number is in the filename — newer versions will be <code>v0.2</code>, <code>v0.3</code>, etc.</li>
+  </ul>
+  <div class="shot">Screenshot 02</div>
+  <figure><img src="screenshots/02-save-file.png" alt="Screenshot 02 — saving the bfm-debrief file to the Files app">
+    <figcaption>Saving <code>bfm-debrief-v0.1.html</code> to Files. <b>[capture however you’ll actually send it — email / Teams / shared drive]</b></figcaption></figure>
+</section>
+
+<!-- ============ STEP 3 ============ -->
+<section class="step">
+  <h2><span class="n">3</span> Open it in Edge</h2>
+  <div class="lead">From the Files app, hand the file to Edge.</div>
+  <ol>
+    <li>In <b>Files</b>, press and hold <code>bfm-debrief-v0.1.html</code>.</li>
+    <li>Tap <b>Share</b>.</li>
+    <li>Choose <b>Microsoft Edge</b> (tap <b>More</b> first if you don’t see it).</li>
+  </ol>
+  <div class="note"><b>Confirm these taps:</b> this is the one device-specific step — please verify the exact path you used so it’s 100% right for everyone.</div>
+  <div class="shot">Screenshots 03–04</div>
+  <figure><img src="screenshots/03-share-sheet.png" alt="Screenshot 03 — the iOS Share sheet with Microsoft Edge as an option">
+    <figcaption>The Share sheet — choose Microsoft Edge.</figcaption></figure>
+  <figure><img src="screenshots/04-opened-in-edge.png" alt="Screenshot 04 — the tool's start screen open in Edge">
+    <figcaption>The tool’s start screen, now open in Edge.</figcaption></figure>
+</section>
+
+<!-- ============ STEP 4 ============ -->
+<section class="step">
+  <h2><span class="n">4</span> Try the demo first</h2>
+  <div class="lead">See how it works before loading your own logs.</div>
+  <ul>
+    <li>On the start screen, tap <b>▶ View demo flight</b>.</li>
+    <li>The 3D replay loads, paused. Tap <b>PLAY</b> at the bottom to roll it.</li>
+  </ul>
+  <div class="shot">Screenshot 05</div>
+  <figure><img src="screenshots/05-replay-demo.png" alt="Screenshot 05 — the 3D replay running with the demo data">
+    <figcaption>The replay view with the demo engagement.</figcaption></figure>
+</section>
+
+<!-- ============ STEP 5 ============ -->
+<section class="step">
+  <h2><span class="n">5</span> Load your own flight</h2>
+  <div class="lead">Export the track log from ForeFlight as <b>KML</b> for each aircraft, then load them here.</div>
+  <ol>
+    <li>On the start screen, tap the <b>“Drop KML files here”</b> box.</li>
+    <li>Pick your <b>.kml</b> files from Files — normally <b>two</b>, one per jet.</li>
+    <li>The replay builds automatically.</li>
+  </ol>
+  <div class="note"><b>Tip:</b> select both KML files at once so the two jets share one timeline.</div>
+  <div class="shot">Screenshots 06–07</div>
+  <figure><img src="screenshots/06-file-picker.png" alt="Screenshot 06 — choosing KML files from the Files picker">
+    <figcaption>Choosing your KML exports from Files.</figcaption></figure>
+  <figure><img src="screenshots/07-replay-own.png" alt="Screenshot 07 — the replay built from the user's own KML files">
+    <figcaption>Your own engagement, loaded.</figcaption></figure>
+</section>
+
+<!-- ============ STEP 6 ============ -->
+<section class="step">
+  <h2><span class="n">6</span> Getting around the replay</h2>
+  <div class="lead">Everything you need is in the top header and the bottom transport bar.</div>
+  <table>
+    <tr><th>Control</th><th>What it does</th></tr>
+    <tr><td><b>Drag on the 3D view</b></td><td>Orbit the camera. Pinch to zoom (or use the + / − buttons).</td></tr>
+    <tr><td><b>PLAY / timeline scrubber</b></td><td>Play, pause, and drag the playhead to any moment. Speed buttons: 1×–16×.</td></tr>
+    <tr><td><b>↦ Merge</b></td><td>Jump to the closest pass (the highlighted tick on the timeline).</td></tr>
+    <tr><td><b>◳ View ▾</b> (header)</td><td>Camera presets: God’s Eye, Chase J1/J2, Side, Free Orbit.</td></tr>
+    <tr><td><b>Curtains · Range · Traces · Shadows · Grid</b></td><td>Display toggles in the header — tap to turn each on/off.</td></tr>
+    <tr><td><b>⚙</b> (header)</td><td>Sliders for vertical exaggeration and trail length.</td></tr>
+    <tr><td><b>SLANT RANGE</b> (top center)</td><td>Live distance and closure rate between the jets.</td></tr>
+  </table>
+  <div class="foot">
+    BFM Debrief Tool · v0.1 · The page works fully offline once opened — no internet or sign-in needed.
+    Your flight data never leaves the iPad.
+  </div>
+</section>
+
+</body>
+</html>
