@@ -516,40 +516,55 @@ const group=new THREE.Group(); scene.add(group);
 
 function worldPos(p){ return new THREE.Vector3(p[0]*SCALE, p[1]*SCALE*state.vx, -p[2]*SCALE); }
 
-// ---------- T-45 low-poly model (nose = +Z, right wing = +X, up = +Y) ----------
+// ---------- T-45 Goshawk low-poly model (nose = +Z, right wing = +X, up = +Y) ----------
 function buildPlane(color){
   const g=new THREE.Group();
-  const skin=new THREE.MeshStandardMaterial({color:color,metalness:0.25,roughness:0.55,flatShading:true});
-  const surf=new THREE.MeshStandardMaterial({color:color,metalness:0.25,roughness:0.55,side:THREE.DoubleSide,flatShading:true});
-  const glass=new THREE.MeshStandardMaterial({color:0x0a0f15,metalness:0.4,roughness:0.25});
-  // fuselage + nose + tail boom
-  const fus=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.08,1.05,12),skin);
-  fus.rotation.x=Math.PI/2; g.add(fus);
-  const nose=new THREE.Mesh(new THREE.ConeGeometry(0.055,0.4,12),skin);
-  nose.rotation.x=Math.PI/2; nose.position.z=0.72; g.add(nose);
-  const boom=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.42,12),skin);
-  boom.rotation.x=-Math.PI/2; boom.position.z=-0.7; g.add(boom);
-  // canopy
-  const can=new THREE.Mesh(new THREE.SphereGeometry(0.07,12,10),glass);
-  can.scale.set(0.85,0.7,1.9); can.position.set(0,0.055,0.27); g.add(can);
-  // helper: flat surface from triangles
-  function surfMesh(verts){const geo=new THREE.BufferGeometry();
-    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(verts),3));
+  const skin=new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.5,flatShading:true});
+  const surf=new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.5,side:THREE.DoubleSide,flatShading:true});
+  const dark=new THREE.MeshStandardMaterial({color:0x0a0f15,metalness:0.5,roughness:0.25});
+
+  // fuselage: body -> pointed radome nose -> tapered tail -> exhaust nozzle
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.075,0.9,16),skin);
+  body.rotation.x=Math.PI/2; g.add(body);
+  const nose=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.5,16),skin);
+  nose.rotation.x=Math.PI/2; nose.position.z=0.69; g.add(nose);
+  const tail=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.075,0.42,16),skin);
+  tail.rotation.x=Math.PI/2; tail.position.z=-0.63; g.add(tail);
+  const noz=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.05,0.07,16),dark);
+  noz.rotation.x=Math.PI/2; noz.position.z=-0.86; g.add(noz);
+
+  // long two-seat bubble canopy + dorsal spine
+  const can=new THREE.Mesh(new THREE.SphereGeometry(0.075,16,12),dark);
+  can.scale.set(0.78,0.82,2.6); can.position.set(0,0.065,0.27); g.add(can);
+  const spine=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.05,0.55,10),skin);
+  spine.rotation.x=Math.PI/2; spine.position.set(0,0.045,-0.18); g.add(spine);
+
+  // side intakes by the wing root (a T-45 signature)
+  const intakeGeo=new THREE.BoxGeometry(0.055,0.075,0.26);
+  [-1,1].forEach(s=>{const m=new THREE.Mesh(intakeGeo,skin); m.position.set(0.1*s,-0.005,0.1); g.add(m);});
+
+  // flat-surface helpers
+  function surfMesh(v){const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(v),3));
     geo.computeVertexNormals(); return new THREE.Mesh(geo,surf);}
-  // swept wings (low-mounted, slight anhedral by y=-0.02)
-  const wy=-0.02;
-  g.add(surfMesh([
-     0.06,wy,0.16,  0.06,wy,-0.22,  0.96,wy,-0.46,
-     0.06,wy,0.16,  0.96,wy,-0.46,  0.9,wy,-0.2,
-    -0.06,wy,0.16, -0.96,wy,-0.46, -0.06,wy,-0.22,
-    -0.06,wy,0.16, -0.9,wy,-0.2,   -0.96,wy,-0.46 ]));
-  // horizontal stabilizers
-  g.add(surfMesh([
-     0.05,0,-0.58,  0.05,0,-0.78,  0.42,0,-0.84,
-    -0.05,0,-0.58, -0.42,0,-0.84, -0.05,0,-0.78 ]));
-  // vertical tail (x=0 plane, swept)
-  g.add(surfMesh([ 0,0.03,-0.5, 0,0.03,-0.82, 0.01,0.46,-0.8 ]));
-  g.scale.setScalar(1.15);
+  const quad=(a,b,c,d)=>[...a,...b,...c, ...a,...c,...d];
+  const mx=p=>[-p[0],p[1],p[2]];
+
+  // wings: low-mounted, swept leading edge, tapered tip
+  const wy=-0.03;
+  const A=[0.08,wy,0.16], B=[0.08,wy,-0.34], C=[0.66,wy,-0.46], D=[0.66,wy,-0.18];
+  g.add(surfMesh([...quad(A,B,C,D), ...quad(mx(A),mx(D),mx(C),mx(B))]));
+
+  // horizontal stabilizers (swept, at the tail)
+  const hy=0.0, hz=-0.66;
+  const E=[0.05,hy,hz+0.05], F=[0.05,hy,hz-0.12], H=[0.40,hy,hz-0.18], I=[0.40,hy,hz-0.04];
+  g.add(surfMesh([...quad(E,F,H,I), ...quad(mx(E),mx(I),mx(H),mx(F))]));
+
+  // single swept vertical tail (x≈0 plane)
+  const Vlb=[0,0.05,-0.42], Vrb=[0,0.05,-0.84], Vrt=[0.006,0.46,-0.78], Vlt=[0.006,0.46,-0.62];
+  g.add(surfMesh(quad(Vlb,Vrb,Vrt,Vlt)));
+
+  g.scale.setScalar(1.05);
   return g;
 }
 
