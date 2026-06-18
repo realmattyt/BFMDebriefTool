@@ -558,7 +558,7 @@ function sampleAt(tk,sec){
 
 // ---------- state & time ----------
 const TMAX=DATA.tmax;
-const state={t:0,playing:false,speed:2,vx:2.5,
+const state={t:Math.min(DATA.start_at||0,TMAX),playing:false,speed:2,vx:2.5,
   curtain:true,rangevec:true,traces:false,shadow:false,grid:true,
   trail:60,view:'free'};
 
