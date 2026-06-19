@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
-<title>BFM Recreation — 17 Jun 2026</title>
+<title>BFM Debrief Tool v0.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -35,9 +35,22 @@ canvas{display:block}
 #brand{flex:none;line-height:1.1}
 #brand h1{font:600 14px/1 'Chakra Petch';letter-spacing:.14em;text-transform:uppercase}
 #brand .sub{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
+.vtag{text-transform:none;color:var(--dim);font-weight:600;letter-spacing:.02em;font-size:.78em}
 #hctrl{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto}
 #hctrl::-webkit-scrollbar{height:0}
 #viewsWrap{position:relative;flex:none}
+#info{flex:none;width:34px;padding:8px 0;font-size:14px;line-height:1}
+
+/* about / info modal */
+#about{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
+  background:#04070bcc;backdrop-filter:blur(3px);padding:24px}
+#about.open{display:flex}
+.about-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;
+  padding:22px 28px;max-width:340px;text-align:center;backdrop-filter:blur(10px)}
+.about-card h3{font:700 15px 'Chakra Petch';letter-spacing:.1em;text-transform:uppercase;margin-bottom:15px}
+.about-card p{font-size:12px;line-height:1.7;margin:7px 0}
+.about-card a{color:var(--hud);text-decoration:none}
+#aboutClose{margin-top:18px}
 
 /* top bar (HUD readouts + range), sits below the header */
 #top{position:fixed;top:46px;left:0;right:0;display:flex;gap:0;
@@ -182,8 +195,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 
 <div id="landing">
   <div>
-    <div class="brand">BFM Recreation</div>
-    <div class="tag">3D dogfight debrief from your ForeFlight track logs. Add each jet's KML
+    <div class="brand">BFM Debrief Tool <span class="vtag">v0.2</span></div>
+    <div class="tag">3D debrief from your ForeFlight track logs. Add each jet's KML
       separately — they can be in different folders. Everything runs on your device; nothing is uploaded.</div>
   </div>
   <div id="jets">
@@ -208,11 +221,10 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <div class="or">— or —</div>
   <button id="demoBtn">▶ View demo flight</button>
   <div id="lerr"></div>
-  <div id="ver">dev build</div>
 </div>
 
 <div id="header">
-  <div id="brand"><h1>BFM RECREATION</h1><div class="sub" id="subt">17 JUN 2026</div></div>
+  <div id="brand"><h1>BFM Debrief Tool <span class="vtag">v0.2</span></h1><div class="sub" id="subt">17 JUN 2026</div></div>
   <div id="hctrl">
     <div id="viewsWrap">
       <button id="viewsBtn">◳ Free Orbit ▾</button>
@@ -225,6 +237,16 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       </div>
     </div>
     <button id="gear">⚙ Display ▾</button>
+    <button id="info" aria-label="About">ⓘ</button>
+  </div>
+</div>
+
+<div id="about">
+  <div class="about-card">
+    <h3>BFM Debrief Tool <span class="vtag">v0.2</span></h3>
+    <p>Created by<br><b>LCDR Matthew "Jojo" Thomas</b></p>
+    <p class="dim">Cell: <a href="tel:+13014733103">301-473-3103</a></p>
+    <button id="aboutClose">Close</button>
   </div>
 </div>
 
@@ -954,6 +976,14 @@ viewsBtn.onclick=e=>{e.stopPropagation();
 document.addEventListener('click',e=>{
   if(!viewsWrap.contains(e.target) && !viewsMenu.contains(e.target)) viewsMenu.classList.remove('open');
   if(!gearBtn.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('open');});
+
+// about / info modal
+const aboutEl=$('#about'), infoBtn=$('#info');
+infoBtn.onclick=e=>{e.stopPropagation();
+  panel.classList.remove('open'); viewsMenu.classList.remove('open');
+  aboutEl.classList.add('open');};
+$('#aboutClose').onclick=()=>aboutEl.classList.remove('open');
+aboutEl.onclick=e=>{ if(e.target===aboutEl) aboutEl.classList.remove('open'); };  // backdrop click closes
 
 // zoom buttons (tap = step, hold = continuous)
 function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
