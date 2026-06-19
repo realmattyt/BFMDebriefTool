@@ -39,7 +39,6 @@ canvas{display:block}
 #hctrl{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto}
 #hctrl::-webkit-scrollbar{height:0}
 #viewsWrap{position:relative;flex:none}
-#info{flex:none;width:34px;padding:8px 0;font-size:14px;line-height:1}
 
 /* about / info modal */
 #about{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
@@ -179,7 +178,9 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   padding:10px 20px;cursor:pointer;font-weight:600}
 #demoBtn:hover{border-color:#2f4456}
 #lerr{color:var(--warn);font-size:11px;min-height:14px;letter-spacing:.04em}
-#ver{position:fixed;bottom:14px;right:16px;font-size:10px;color:var(--faint);letter-spacing:.12em}
+#aboutBtn{background:none;border:0;color:var(--dim);font-family:'Azeret Mono',monospace;
+  font-size:11px;letter-spacing:.06em;cursor:pointer;padding:6px 10px}
+#aboutBtn:hover{color:var(--ink)}
 
 @media (max-width:560px){
   .read{width:122px;padding:6px 7px}
@@ -221,6 +222,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <div class="or">— or —</div>
   <button id="demoBtn">▶ View demo flight</button>
   <div id="lerr"></div>
+  <button id="aboutBtn">ⓘ About &amp; contact</button>
 </div>
 
 <div id="header">
@@ -237,7 +239,6 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       </div>
     </div>
     <button id="gear">⚙ Display ▾</button>
-    <button id="info" aria-label="About">ⓘ</button>
   </div>
 </div>
 
@@ -424,6 +425,12 @@ function buildTrackData(files){
     landing.style.display='none';
     startViewer(data);
   }
+
+  // about / info modal (landing page only)
+  const aboutEl=document.getElementById('about');
+  document.getElementById('aboutBtn').onclick=()=>aboutEl.classList.add('open');
+  document.getElementById('aboutClose').onclick=()=>aboutEl.classList.remove('open');
+  aboutEl.onclick=e=>{ if(e.target===aboutEl) aboutEl.classList.remove('open'); };  // backdrop click closes
 
   // per-jet cards: name field, color swatches, and an independent file picker
   cards.forEach((card,ci)=>{
@@ -976,14 +983,6 @@ viewsBtn.onclick=e=>{e.stopPropagation();
 document.addEventListener('click',e=>{
   if(!viewsWrap.contains(e.target) && !viewsMenu.contains(e.target)) viewsMenu.classList.remove('open');
   if(!gearBtn.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('open');});
-
-// about / info modal
-const aboutEl=$('#about'), infoBtn=$('#info');
-infoBtn.onclick=e=>{e.stopPropagation();
-  panel.classList.remove('open'); viewsMenu.classList.remove('open');
-  aboutEl.classList.add('open');};
-$('#aboutClose').onclick=()=>aboutEl.classList.remove('open');
-aboutEl.onclick=e=>{ if(e.target===aboutEl) aboutEl.classList.remove('open'); };  // backdrop click closes
 
 // zoom buttons (tap = step, hold = continuous)
 function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
