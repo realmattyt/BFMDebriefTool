@@ -37,11 +37,6 @@ canvas{display:block}
 #brand .sub{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
 #hctrl{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto}
 #hctrl::-webkit-scrollbar{height:0}
-.tgls{display:flex;gap:5px;flex:none}
-.tgl{font-family:'Chakra Petch';font-size:10px;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--dim);background:#0e1620;border:1px solid var(--line);border-radius:6px;
-  padding:7px 9px;cursor:pointer;white-space:nowrap}
-.tgl.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
 #viewsWrap{position:relative;flex:none}
 
 /* top bar (HUD readouts + range), sits below the header */
@@ -58,7 +53,7 @@ canvas{display:block}
 
 /* jet readouts (both stacked in a column on the right) */
 .reads{display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:flex-end}
-.reads-spacer{min-width:140px}
+.reads-spacer{min-width:150px}
 .read{width:150px;background:var(--panel);border:1px solid var(--line);
   border-radius:7px;padding:7px 9px;pointer-events:auto;backdrop-filter:blur(7px)}
 .read .nm{display:flex;align-items:center;gap:6px;font:700 12px 'Chakra Petch';letter-spacing:.1em}
@@ -175,10 +170,10 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 
 @media (max-width:560px){
   .read{width:122px;padding:6px 7px}
+  .reads-spacer{min-width:122px}
   #sep .rng{font-size:21px}
   #brand .sub{display:none}
   #brand h1{font-size:12px}
-  .tgl{padding:7px 7px}
 }
 </style>
 </head>
