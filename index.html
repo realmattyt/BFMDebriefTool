@@ -56,7 +56,9 @@ canvas{display:block}
 #sep .rlbl{font-size:9px;color:var(--dim);letter-spacing:.22em;margin-top:3px}
 #sep .clo{font-size:11px;margin-top:4px;color:var(--ink)}
 
-/* jet readouts */
+/* jet readouts (both stacked in a column on the left) */
+.reads{display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.reads-spacer{min-width:140px}
 .read{min-width:140px;background:var(--panel);border:1px solid var(--line);
   border-radius:7px;padding:7px 9px;pointer-events:auto;backdrop-filter:blur(7px)}
 .read .nm{display:flex;align-items:center;gap:6px;font:700 12px 'Chakra Petch';letter-spacing:.1em}
@@ -82,15 +84,16 @@ canvas{display:block}
 .band{position:absolute;height:3px;border-radius:2px;top:23px;opacity:.85}
 #knob{position:absolute;top:7px;width:3px;height:16px;background:#fff;
   box-shadow:0 0 10px #fff;transform:translateX(-50%)}
-#hot{position:absolute;top:4px;width:0;height:0;border-left:5px solid transparent;
+.mtick{position:absolute;top:4px;width:0;height:0;border-left:5px solid transparent;
   border-right:5px solid transparent;border-top:7px solid var(--warn);
-  transform:translateX(-50%);display:none}
+  transform:translateX(-50%);pointer-events:auto;cursor:help}
 
 .ctrls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 button{font-family:'Chakra Petch';font-size:11px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink);background:#0e1620;border:1px solid var(--line);border-radius:6px;
   padding:8px 11px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 button:hover{border-color:#2f4456}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line)}
 button.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
 button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-width:54px;font-weight:700}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
@@ -232,14 +235,26 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 </div>
 
 <div id="top">
-  <div class="read r1" id="rd1">
-    <div class="nm"><span class="dot" style="color:var(--j1)"></span><span>JET 1</span></div>
-    <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
-    <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
-    <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
-    <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
-    <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
-    <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+  <div class="reads">
+    <div class="read r1" id="rd1">
+      <div class="nm"><span class="dot" style="color:var(--j1)"></span><span>JET 1</span></div>
+      <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
+      <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
+      <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
+      <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+      <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
+      <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+    </div>
+
+    <div class="read r2" id="rd2">
+      <div class="nm"><span class="dot" style="color:var(--j2)"></span><span>JET 2</span></div>
+      <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
+      <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
+      <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
+      <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+      <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
+      <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+    </div>
   </div>
 
   <div style="display:flex;flex-direction:column;align-items:center">
@@ -250,15 +265,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
     </div>
   </div>
 
-  <div class="read r2" id="rd2">
-    <div class="nm"><span class="dot" style="color:var(--j2)"></span><span>JET 2</span></div>
-    <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
-    <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
-    <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
-    <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
-    <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
-    <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
-  </div>
+  <div class="reads-spacer"></div>
 </div>
 
 <div id="zoom">
@@ -277,13 +284,12 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 <div id="bottom">
   <div id="clock">
     <span class="z" id="zt">20:35:59Z</span>
-    <span class="el" id="elt">T+00:00 / 1:07:18 · MERGE —</span>
+    <span class="el" id="elt">T+00:00 / 1:07:18 · — MERGES</span>
   </div>
   <div id="scrub">
     <div id="track"><div id="fill"></div></div>
     <div class="band" id="b1" style="background:var(--j1)"></div>
     <div class="band" id="b2" style="background:var(--j2)"></div>
-    <div id="hot"></div>
     <div id="knob"></div>
   </div>
   <div class="ctrls">
@@ -293,7 +299,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       <button data-s="1">1×</button><button data-s="2" class="on">2×</button>
       <button data-s="4">4×</button><button data-s="8">8×</button><button data-s="16">16×</button>
     </div>
-    <button id="merge">↦ Merge</button>
+    <button id="mprev">◀ Merge</button>
+    <button id="mnext">Merge ▶</button>
     <button id="rew">⟲ Start</button>
   </div>
 </div>
@@ -685,18 +692,58 @@ function velVec(tk,sec){
 
 // ---------- state & time ----------
 const TMAX=DATA.tmax;
-const state={t:Math.min(DATA.start_at||0,TMAX),playing:false,speed:2,vx:2.5,
+const state={t:Math.min(DATA.start_at||0,TMAX),playing:false,speed:2,vx:1,
   curtain:true,rangevec:true,traces:false,shadow:false,grid:true,
   trail:30,view:'free'};
 
-// find merge (min separation) time
-let mergeT=0,mergeSep=1e9;
+// angle off own nose toward the other jet: angle between own velocity and LOS
+function aonBetween(self,other,v){
+  if(!self||!other||!v) return null;
+  const losE=other.e-self.e, losU=other.u-self.u, losN=other.n-self.n;
+  const vl=Math.hypot(v.e,v.u,v.n), ll=Math.hypot(losE,losU,losN);
+  if(vl<1e-6||ll<1e-6) return null;
+  let dot=(v.e*losE+v.u*losU+v.n*losN)/(vl*ll);
+  dot=Math.max(-1,Math.min(1,dot));
+  return Math.acos(dot)*180/Math.PI;
+}
+
+// detect merges: a "pass" is a local minimum of separation inside MERGE_FT. It
+// counts as a merge only if, during the approach (the few seconds before the
+// closest point), BOTH jets had the other near their nose (angle-off-nose <
+// MERGE_AON). That mutual nose-on convergence is what separates a true merge
+// from a chase/formation pass, where the trailing jet's AON stays high.
+// Checking the approach (not the closest point) matters because the noses swing
+// rapidly through 90° at a fast crossing, after the jets are already inside the
+// range gate.
+// 3000 ft ≈ T-45 turn radius at corner airspeed (per NATOPS): two jets passing
+// closer than one corner-speed turn radius constitutes a merge.
+const MERGE_FT=3000, MERGE_AON=90, MERGE_LOOKBACK=8;
+const merges=[];
 const hasPair=tracks.length>=2;
 if(hasPair)(function(){
-  for(let s=0;s<=TMAX;s+=2){
-    const a=sampleAt(tracks[0],s),b=sampleAt(tracks[1],s);
-    if(a&&b){const d=Math.hypot(a.e-b.e,a.u-b.u,a.n-b.n);
-      if(d<mergeSep){mergeSep=d;mergeT=s;}}
+  // separation (ft) sampled at 1 s resolution
+  const sep=[];
+  for(let s=0;s<=TMAX;s++){
+    const a=sampleAt(tracks[0],s), b=sampleAt(tracks[1],s);
+    sep.push(a&&b ? Math.hypot(a.e-b.e,a.u-b.u,a.n-b.n)*M2FT : Infinity);
+  }
+  const cand=[];
+  for(let s=1;s<sep.length-1;s++){
+    if(sep[s]<MERGE_FT && sep[s]<=sep[s-1] && sep[s]<sep[s+1]){
+      let noseOn=false;
+      for(let u=Math.max(0,s-MERGE_LOOKBACK);u<=s;u++){
+        const aonA=aonBetween(sampleAt(tracks[0],u),sampleAt(tracks[1],u),velVec(tracks[0],u));
+        const aonB=aonBetween(sampleAt(tracks[1],u),sampleAt(tracks[0],u),velVec(tracks[1],u));
+        if(aonA!=null&&aonB!=null&&aonA<MERGE_AON&&aonB<MERGE_AON){ noseOn=true; break; }
+      }
+      if(noseOn) cand.push(s);
+    }
+  }
+  // collapse minima within 20 s of each other, keeping the closest pass
+  for(const m of cand){
+    const last=merges.length?merges[merges.length-1]:null;
+    if(last!=null && m-last<20){ if(sep[m]<sep[last]) merges[merges.length-1]=m; }
+    else merges.push(m);
   }
 })();
 
@@ -742,7 +789,15 @@ const playBtn=$('#play');
 playBtn.onclick=()=>{state.playing=!state.playing;playBtn.textContent=state.playing?'PAUSE':'PLAY';
   playBtn.classList.toggle('on',state.playing);};
 $('#rew').onclick=()=>{state.t=0;};
-$('#merge').onclick=()=>{state.t=mergeT;};
+$('#mprev').onclick=()=>{
+  const prev=merges.filter(m=>m<state.t-0.5).pop();
+  if(prev!=null) state.t=prev;
+};
+$('#mnext').onclick=()=>{
+  const next=merges.find(m=>m>state.t+0.5);
+  if(next!=null) state.t=next;
+};
+if(!merges.length){ ['#mprev','#mnext'].forEach(id=>{const b=$(id); if(b) b.disabled=true;}); }
 document.querySelectorAll('#spd button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#spd button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');state.speed=+b.dataset.s;});
@@ -829,7 +884,13 @@ scrub.addEventListener('touchend',()=>scrubbing=false);
     const s=tk.P[0][3]/TMAX, e=tk.P[tk.P.length-1][3]/TMAX;
     b.style.left=(s*100)+'%'; b.style.width=((e-s)*100)+'%';
   });
-  if(hasPair){const hot=$('#hot'); hot.style.left=(mergeT/TMAX*100)+'%'; hot.style.display='block';}
+  merges.forEach(m=>{
+    const tick=document.createElement('div');
+    tick.className='mtick';
+    tick.style.left=(m/TMAX*100)+'%';
+    tick.title='Merge '+mmss(m).replace('T+','');
+    scrub.appendChild(tick);
+  });
 })();
 
 // hide hint after a bit
@@ -891,28 +952,41 @@ function frame(now){
       const sP=sampleAt(tk,Math.max(state.t-1,startT));
       if(sN){
         const wN=worldPos([sN.e,sN.u,sN.n]);
-        const fwd=wN.clone().sub(w);
+        const wP=sP?worldPos([sP.e,sP.u,sP.n]):w.clone();
+        // nose along the velocity vector (central difference when possible)
+        const fwd=wN.clone().sub(wP);
+        if(fwd.lengthSq()<1e-8) fwd.copy(wN).sub(w);
         if(fwd.lengthSq()>1e-8){
           fwd.normalize();
-          // 1) put nose (+Z) directly on the velocity vector
           const q0=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),fwd);
-          // 2) roll so wings are level (kill the arbitrary roll from step 1)
-          const someUp=new THREE.Vector3(0,1,0).applyQuaternion(q0);
-          let levelUp=new THREE.Vector3(0,1,0).addScaledVector(fwd,-fwd.y);
-          if(levelUp.lengthSq()<1e-6) levelUp.set(0,0,-1).addScaledVector(fwd,fwd.z); // near-vertical
-          levelUp.normalize();
-          let phi=Math.atan2(new THREE.Vector3().crossVectors(someUp,levelUp).dot(fwd), someUp.dot(levelUp));
-          // 3) bank into the turn
-          let bank=0;
-          if(sP){
-            const wP=worldPos([sP.e,sP.u,sP.n]);
-            const h1=Math.atan2(wN.x-w.x, -(wN.z-w.z));
-            const h0=Math.atan2(w.x-wP.x, -(w.z-wP.z));
-            let d=h1-h0; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
-            bank=Math.max(-1.2,Math.min(1.2,3.2*d));
+          const someUp=new THREE.Vector3(0,1,0).applyQuaternion(q0); // canopy-up reference
+          // Roll from the actual load-factor vector: lift ∝ acceleration + g
+          // (the direction the airframe must push). This captures the VERTICAL
+          // fight — a jet pulling in the vertical rolls/inverts to keep its lift
+          // vector on the turn, which a horizontal-turn-rate estimate misses.
+          const gUp=9.81*SCALE*state.vx;
+          const accel=wN.clone().add(wP).addScaledVector(w,-2);    // ∝ d²x/dt² (dt=1s)
+          const lift=accel.clone().add(new THREE.Vector3(0,gUp,0));
+          // When barely maneuvering the roll is ambiguous, so default the lift
+          // vector toward the adversary — a fighter pulls lift-on-bandit.
+          const oth=samp[1-i];
+          if(oth){
+            const losW=worldPos([oth.e,oth.u,oth.n]).sub(w);
+            const losPerp=losW.addScaledVector(fwd,-losW.dot(fwd));
+            if(losPerp.lengthSq()>1e-9){
+              const trust=Math.min(1, accel.length()/(0.3*gUp)); // 1=trust maneuver, 0=ambiguous
+              lift.lerp(losPerp.setLength(lift.length()||gUp), 1-trust);
+            }
           }
-          const qRoll=new THREE.Quaternion().setFromAxisAngle(fwd,phi+bank);
-          tk.plane.quaternion.copy(qRoll).multiply(q0);
+          // roll so the canopy (+Y) points along the lift vector
+          const Lp=lift.addScaledVector(fwd,-lift.dot(fwd));
+          if(Lp.lengthSq()>1e-9){
+            Lp.normalize();
+            const roll=Math.atan2(new THREE.Vector3().crossVectors(someUp,Lp).dot(fwd), someUp.dot(Lp));
+            tk.plane.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(fwd,roll)).multiply(q0);
+          } else {
+            tk.plane.quaternion.copy(q0);
+          }
         }
       }
       centroid.add(w);nC++;
@@ -923,17 +997,11 @@ function frame(now){
         readEls[i].vs.textContent=(s.vs>=0?'+':'')+Math.round(s.vs/10)*10+' fpm';
         readEls[i].g.textContent=s.g.toFixed(1)+' g';
         // angle off nose / tail relative to the other jet (3D LOS vs own velocity)
-        const oth=samp[1-i], v=velVec(tk,state.t);
-        if(oth&&v){
-          const losE=oth.e-s.e, losU=oth.u-s.u, losN=oth.n-s.n;
-          const vl=Math.hypot(v.e,v.u,v.n), ll=Math.hypot(losE,losU,losN);
-          if(vl>1e-6&&ll>1e-6){
-            let dot=(v.e*losE+v.u*losU+v.n*losN)/(vl*ll);
-            dot=Math.max(-1,Math.min(1,dot));
-            const aon=Math.acos(dot)*180/Math.PI;
-            readEls[i].aon.textContent=Math.round(aon)+'°';
-            readEls[i].aot.textContent=Math.round(180-aon)+'°';
-          } else { readEls[i].aon.textContent='—'; readEls[i].aot.textContent='—'; }
+        const oth=samp[1-i];
+        const aon=aonBetween(s,oth,velVec(tk,state.t));
+        if(aon!=null){
+          readEls[i].aon.textContent=Math.round(aon)+'°';
+          readEls[i].aot.textContent=Math.round(180-aon)+'°';
         } else { readEls[i].aon.textContent='—'; readEls[i].aot.textContent='—'; }
       }
       // trail
@@ -998,7 +1066,7 @@ function frame(now){
 
   // clock
   $('#zt').textContent=hhmmss(state.t);
-  $('#elt').textContent=mmss(state.t)+' / '+dur(TMAX)+' · MERGE '+mmss(mergeT).replace('T+','');
+  $('#elt').textContent=mmss(state.t)+' / '+dur(TMAX)+' · '+merges.length+' MERGE'+(merges.length===1?'':'S');
   $('#fill').style.width=(state.t/TMAX*100)+'%';
   $('#knob').style.left=(state.t/TMAX*100)+'%';
 
