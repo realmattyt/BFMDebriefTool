@@ -238,6 +238,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
     <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
     <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
     <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+    <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
+    <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
   </div>
 
   <div style="display:flex;flex-direction:column;align-items:center">
@@ -254,6 +256,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
     <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
     <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
     <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+    <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
+    <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
   </div>
 </div>
 
@@ -671,6 +675,14 @@ function sampleAt(tk,sec){
   return {e,u,n,idx:hi,alt_ft:u*M2FT,gs:d.gs,vs:d.vs,g:d.g};
 }
 
+// 3D velocity (heading) vector in data coords, via a ±1s central difference
+function velVec(tk,sec){
+  const startT=tk.P[0][3], endT=tk.P[tk.P.length-1][3];
+  const a=sampleAt(tk,Math.max(sec-1,startT)), b=sampleAt(tk,Math.min(sec+1,endT));
+  if(!a||!b) return null;
+  return {e:b.e-a.e,u:b.u-a.u,n:b.n-a.n};
+}
+
 // ---------- state & time ----------
 const TMAX=DATA.tmax;
 const state={t:Math.min(DATA.start_at||0,TMAX),playing:false,speed:2,vx:2.5,
@@ -831,8 +843,8 @@ function dur(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=Math.
   return (h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(s).padStart(2,'0');}
 
 const readEls=[
-  {alt:$('#rd1 [data-f=alt]'),gs:$('#rd1 [data-f=gs]'),vs:$('#rd1 [data-f=vs]'),g:$('#rd1 [data-f=g]')},
-  {alt:$('#rd2 [data-f=alt]'),gs:$('#rd2 [data-f=gs]'),vs:$('#rd2 [data-f=vs]'),g:$('#rd2 [data-f=g]')},
+  {alt:$('#rd1 [data-f=alt]'),gs:$('#rd1 [data-f=gs]'),vs:$('#rd1 [data-f=vs]'),g:$('#rd1 [data-f=g]'),aon:$('#rd1 [data-f=aon]'),aot:$('#rd1 [data-f=aot]')},
+  {alt:$('#rd2 [data-f=alt]'),gs:$('#rd2 [data-f=gs]'),vs:$('#rd2 [data-f=vs]'),g:$('#rd2 [data-f=g]'),aon:$('#rd2 [data-f=aon]'),aot:$('#rd2 [data-f=aot]')},
 ];
 
 // ---------- main loop ----------
@@ -910,6 +922,19 @@ function frame(now){
         readEls[i].gs.textContent=Math.round(s.gs)+' kt';
         readEls[i].vs.textContent=(s.vs>=0?'+':'')+Math.round(s.vs/10)*10+' fpm';
         readEls[i].g.textContent=s.g.toFixed(1)+' g';
+        // angle off nose / tail relative to the other jet (3D LOS vs own velocity)
+        const oth=samp[1-i], v=velVec(tk,state.t);
+        if(oth&&v){
+          const losE=oth.e-s.e, losU=oth.u-s.u, losN=oth.n-s.n;
+          const vl=Math.hypot(v.e,v.u,v.n), ll=Math.hypot(losE,losU,losN);
+          if(vl>1e-6&&ll>1e-6){
+            let dot=(v.e*losE+v.u*losU+v.n*losN)/(vl*ll);
+            dot=Math.max(-1,Math.min(1,dot));
+            const aon=Math.acos(dot)*180/Math.PI;
+            readEls[i].aon.textContent=Math.round(aon)+'°';
+            readEls[i].aot.textContent=Math.round(180-aon)+'°';
+          } else { readEls[i].aon.textContent='—'; readEls[i].aot.textContent='—'; }
+        } else { readEls[i].aon.textContent='—'; readEls[i].aot.textContent='—'; }
       }
       // trail
       if(state.trail>0){
@@ -923,7 +948,7 @@ function frame(now){
       } else tk.trail.visible=false;
     } else {
       tk.marker.visible=false; tk.trail.visible=false;
-      if(readEls[i])['alt','gs','vs','g'].forEach(f=>readEls[i][f].textContent='—');
+      if(readEls[i])['alt','gs','vs','g','aon','aot'].forEach(f=>readEls[i][f].textContent='—');
     }
   });
 
