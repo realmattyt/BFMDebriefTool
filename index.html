@@ -56,10 +56,10 @@ canvas{display:block}
 #sep .rlbl{font-size:9px;color:var(--dim);letter-spacing:.22em;margin-top:3px}
 #sep .clo{font-size:11px;margin-top:4px;color:var(--ink)}
 
-/* jet readouts (both stacked in a column on the left) */
-.reads{display:flex;flex-direction:column;gap:8px;pointer-events:none}
+/* jet readouts (both stacked in a column on the right) */
+.reads{display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:flex-end}
 .reads-spacer{min-width:140px}
-.read{min-width:140px;background:var(--panel);border:1px solid var(--line);
+.read{width:150px;background:var(--panel);border:1px solid var(--line);
   border-radius:7px;padding:7px 9px;pointer-events:auto;backdrop-filter:blur(7px)}
 .read .nm{display:flex;align-items:center;gap:6px;font:700 12px 'Chakra Petch';letter-spacing:.1em}
 .dot{width:9px;height:9px;border-radius:2px;flex:none;box-shadow:0 0 8px currentColor}
@@ -67,6 +67,12 @@ canvas{display:block}
 .read .row b{font-weight:600;font-variant-numeric:tabular-nums}
 .read .row .k{color:var(--dim);font-size:9px;letter-spacing:.1em;align-self:center}
 .read.r1{border-color:#1d4655} .read.r2{border-color:#5a3318}
+/* per-jet control-zone toggle, inside each readout box */
+.read .czt{margin-top:8px;width:100%;font-family:'Chakra Petch';font-size:9px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--dim);
+  background:#0e1620;border:1px solid var(--line);border-radius:5px;
+  padding:6px 7px;cursor:pointer;pointer-events:auto}
+.read .czt.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
 
 /* bottom transport */
 #bottom{position:fixed;left:0;right:0;bottom:0;z-index:6;
@@ -168,7 +174,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 #ver{position:fixed;bottom:14px;right:16px;font-size:10px;color:var(--faint);letter-spacing:.12em}
 
 @media (max-width:560px){
-  .read{min-width:118px;padding:6px 7px}
+  .read{width:122px;padding:6px 7px}
   #sep .rng{font-size:21px}
   #brand .sub{display:none}
   #brand h1{font-size:12px}
@@ -213,13 +219,6 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 <div id="header">
   <div id="brand"><h1>BFM RECREATION</h1><div class="sub" id="subt">17 JUN 2026</div></div>
   <div id="hctrl">
-    <div class="tgls">
-      <button class="tgl on" data-t="curtain">Curtains</button>
-      <button class="tgl on" data-t="rangevec">Range</button>
-      <button class="tgl" data-t="traces">Traces</button>
-      <button class="tgl" data-t="shadow">Shadows</button>
-      <button class="tgl on" data-t="grid">Grid</button>
-    </div>
     <div id="viewsWrap">
       <button id="viewsBtn">◳ Free Orbit ▾</button>
       <div id="views">
@@ -230,11 +229,21 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
         <button data-v="free" class="on">Free Orbit</button>
       </div>
     </div>
-    <button id="gear">⚙</button>
+    <button id="gear">⚙ Display ▾</button>
   </div>
 </div>
 
 <div id="top">
+  <div class="reads-spacer"></div>
+
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div id="sep">
+      <div class="rng" id="rngv">—</div>
+      <div class="rlbl">SLANT RANGE</div>
+      <div class="clo" id="clov">—</div>
+    </div>
+  </div>
+
   <div class="reads">
     <div class="read r1" id="rd1">
       <div class="nm"><span class="dot" style="color:var(--j1)"></span><span>JET 1</span></div>
@@ -244,6 +253,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
       <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
       <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+      <button class="czt" data-cz="0">⊿ Control Zone</button>
     </div>
 
     <div class="read r2" id="rd2">
@@ -254,18 +264,9 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
       <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
       <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+      <button class="czt" data-cz="1">⊿ Control Zone</button>
     </div>
   </div>
-
-  <div style="display:flex;flex-direction:column;align-items:center">
-    <div id="sep">
-      <div class="rng" id="rngv">—</div>
-      <div class="rlbl">SLANT RANGE</div>
-      <div class="clo" id="clov">—</div>
-    </div>
-  </div>
-
-  <div class="reads-spacer"></div>
 </div>
 
 <div id="zoom">
@@ -274,7 +275,13 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 </div>
 
 <div id="panel">
-  <h3>Trail length</h3>
+  <h3>Display</h3>
+  <div class="opt"><span>Curtains</span><div class="sw" data-t="curtain"><i></i></div></div>
+  <div class="opt"><span>Range vector</span><div class="sw" data-t="rangevec"><i></i></div></div>
+  <div class="opt"><span>Traces</span><div class="sw" data-t="traces"><i></i></div></div>
+  <div class="opt"><span>Shadows</span><div class="sw" data-t="shadow"><i></i></div></div>
+  <div class="opt"><span>Grid</span><div class="sw" data-t="grid"><i></i></div></div>
+  <h3 style="margin-top:13px">Trail length</h3>
   <input id="trail" type="range" min="0" max="180" step="10" value="30">
   <div class="vx"><span class="dim">off</span><span id="trailv">30 s</span><span class="dim">180</span></div>
 </div>
@@ -509,7 +516,7 @@ const tracks=DATA.tracks.map((t,i)=>{
     der[k].g=Math.hypot(aLat,9.81)/9.81;  // approx total load incl 1g
   }
   return {meta:t,P,der,col:t.color||COL[i]||COL[0],
-    line:null,curtain:null,shadow:null,trail:null,marker:null,vis:true};
+    line:null,curtain:null,shadow:null,trail:null,marker:null,czone:null,vis:true,czoneOn:false};
 });
 
 // label each readout panel with the jet's name + color (from the data)
@@ -576,6 +583,107 @@ function buildPlane(color){
   return g;
 }
 
+// ---------- BFM control zone ----------
+// The aft region from which an attacker holds an offensive (controlling)
+// position. Crucially it lies along the defender's TURN CIRCLE extended aft —
+// not a straight cone out the 6 o'clock. We reconstruct the turn circle each
+// frame from velocity + lateral (in-plane) acceleration, then sweep a
+// truncated cone backward along that arc, in the jet's maneuvering plane.
+// Boundary: ±10° at 2000 ft aft, ±20° at 4000 ft aft → a frustum that widens
+// toward the back. When the jet isn't turning the arc straightens to a cone.
+const CZ_NEAR_FT=2000, CZ_FAR_FT=4000, CZ_NEAR_DEG=10, CZ_FAR_DEG=20;
+const CZ_NS=30, CZ_NR=24;  // segments along the arc / around the tube
+function buildCZone(color){
+  const pos=new Float32Array((CZ_NS+1)*CZ_NR*3), idx=[];
+  for(let i=0;i<CZ_NS;i++)for(let j=0;j<CZ_NR;j++){
+    const a=i*CZ_NR+j, b=i*CZ_NR+(j+1)%CZ_NR, c=(i+1)*CZ_NR+j, d=(i+1)*CZ_NR+(j+1)%CZ_NR;
+    idx.push(a,b,d, a,d,c);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setIndex(idx);
+  const grp=new THREE.Group();
+  const surf=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,
+    opacity:0.09,side:THREE.DoubleSide,depthWrite:false}));
+  const wire=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,
+    opacity:0.26,wireframe:true,depthWrite:false}));
+  surf.frustumCulled=false; wire.frustumCulled=false;
+  grp.add(surf); grp.add(wire); grp.frustumCulled=false; grp._geo=geo;
+  return grp;
+}
+
+// Rewrite the frustum's vertices to lie on the jet's turn circle, extended aft.
+// All math in data meters (ordering e,u,n), then projected through worldPos so
+// it tracks the displayed trajectory under vertical exaggeration.
+const CZ_sNear=CZ_NEAR_FT*FT2M, CZ_sFar=CZ_FAR_FT*FT2M;
+const CZ_rNear=CZ_NEAR_FT*Math.tan(CZ_NEAR_DEG*Math.PI/180)*FT2M;
+const CZ_rFar=CZ_FAR_FT*Math.tan(CZ_FAR_DEG*Math.PI/180)*FT2M;
+const CZ_H=3;  // half-window (s) for the velocity/curvature fit
+function czPos(tk,t){ const s=sampleAt(tk,t); return s?new THREE.Vector3(s.e,s.u,s.n):null; }
+function updateCZone(tk,s0){
+  const geo=tk.czone._geo, arr=geo.attributes.position.array;
+  const t=state.t, startT=tk.P[0][3], endT=tk.P[tk.P.length-1][3];
+  const P0=new THREE.Vector3(s0.e,s0.u,s0.n);
+  // Velocity & lateral acceleration from a quadratic (Savitzky-Golay) fit over
+  // a ±CZ_H s window rather than a ±1 s difference. With 1 s track sampling a
+  // tight second-difference swings frame-to-frame, rotating the turn-circle's
+  // centre and making the zone wobble; fitting a parabola over several seconds
+  // averages the curvature and gives a stable arc, with no per-frame state.
+  const m=Math.min(CZ_H,Math.floor(Math.min(t-startT,endT-t)));
+  let fwd, acc;
+  if(m>=1){
+    const Sy=new THREE.Vector3(), Sty=new THREE.Vector3(), St2y=new THREE.Vector3();
+    let N=0, S2=0, S4=0;
+    for(let k=-m;k<=m;k++){
+      const p=czPos(tk,t+k); if(!p) continue;
+      Sy.add(p); Sty.addScaledVector(p,k); St2y.addScaledVector(p,k*k);
+      N++; S2+=k*k; S4+=k*k*k*k;
+    }
+    fwd=Sty.multiplyScalar(1/S2);                              // linear coeff = velocity (m/s)
+    acc=St2y.multiplyScalar(N).addScaledVector(Sy,-S2).multiplyScalar(2/(N*S4-S2*S2)); // 2·quad coeff
+  } else {                                                     // track edge: fall back to ±1 s
+    const a=czPos(tk,Math.max(t-1,startT)), b=czPos(tk,Math.min(t+1,endT));
+    fwd=b.clone().sub(a).multiplyScalar(0.5);
+    acc=b.clone().add(a).addScaledVector(P0,-2);
+  }
+  const v=fwd.length();
+  if(v<1e-4){ tk.czone.visible=false; return; }
+  fwd.multiplyScalar(1/v);
+  const aPerp=acc.clone().addScaledVector(fwd,-acc.dot(fwd));
+  const aMag=aPerp.length();
+  // turn circle: radius R, center C = jet + R*nHat (nHat points to center)
+  let R=Infinity, nHat=null, mHat;
+  if(aMag>1e-3){
+    R=v*v/aMag;
+    nHat=aPerp.clone().multiplyScalar(1/aMag);
+    mHat=fwd.clone().cross(nHat).normalize();              // maneuvering-plane normal
+  }
+  if(!mHat){ // not turning: any frame perpendicular to fwd
+    const up=Math.abs(fwd.y)<0.99?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+    mHat=fwd.clone().cross(up).normalize();
+  }
+  const C=R!==Infinity?P0.clone().addScaledVector(nHat,R):null;
+  for(let i=0;i<=CZ_NS;i++){
+    const f=i/CZ_NS, s=CZ_sNear+(CZ_sFar-CZ_sNear)*f, r=CZ_rNear+(CZ_rFar-CZ_rNear)*f;
+    let cen, tan;
+    if(C){
+      const phi=s/R, cp=Math.cos(phi), sp=Math.sin(phi);
+      cen=C.clone().addScaledVector(nHat,-R*cp).addScaledVector(fwd,-R*sp);
+      tan=nHat.clone().multiplyScalar(sp).addScaledVector(fwd,-cp).normalize();
+    } else {
+      cen=P0.clone().addScaledVector(fwd,-s); tan=fwd.clone().negate();
+    }
+    const b1=tan.clone().cross(mHat).normalize();           // in-plane radial
+    for(let j=0;j<CZ_NR;j++){
+      const a=j/CZ_NR*Math.PI*2, cr=Math.cos(a)*r, sr=Math.sin(a)*r;
+      const wp=worldPos([cen.x+b1.x*cr+mHat.x*sr, cen.y+b1.y*cr+mHat.y*sr, cen.z+b1.z*cr+mHat.z*sr]);
+      const vi=(i*CZ_NR+j)*3; arr[vi]=wp.x; arr[vi+1]=wp.y; arr[vi+2]=wp.z;
+    }
+  }
+  geo.attributes.position.needsUpdate=true;
+  tk.czone.visible=true;
+}
+
 function rebuildGeometry(){
   // (re)build everything affected by vertical exaggeration
   tracks.forEach((tk)=>{
@@ -628,6 +736,8 @@ function rebuildGeometry(){
       m.add(plane);
       tk.marker=m; tk.plane=plane; group.add(m);
     }
+    // control zone (aft frustum) — fixed size, oriented per frame
+    if(!tk.czone){ tk.czone=buildCZone(tk.col); group.add(tk.czone); }
     applyVis(tk);
   });
   buildRangeVec();
@@ -637,6 +747,7 @@ function applyVis(tk){
   tk.line.visible=tk.vis;
   tk.curtain.visible=tk.vis&&state.curtain;
   tk.shadow.visible=tk.vis&&state.shadow;
+  if(tk.czone) tk.czone.visible=tk.vis&&tk.czoneOn;
 }
 
 // range vector line between jets
@@ -802,13 +913,26 @@ document.querySelectorAll('#spd button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#spd button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');state.speed=+b.dataset.s;});
 
-$('#gear').onclick=()=>$('#panel').classList.toggle('open');
-// display toggles (header chips)
-document.querySelectorAll('.tgl').forEach(b=>b.onclick=()=>{
-  const k=b.dataset.t; state[k]=!state[k]; b.classList.toggle('on',state[k]);
-  if(k==='grid')grid.visible=state[k];
-  tracks.forEach(applyVis);
-  rangeLine.visible=state.rangevec;
+const panel=$('#panel'), gearBtn=$('#gear');
+// no stopPropagation: the document handler below closes the views menu and,
+// because the click target is the gear button, leaves this panel open.
+gearBtn.onclick=()=>panel.classList.toggle('open');
+// display toggles (switches in the gear dropdown)
+document.querySelectorAll('#panel .sw[data-t]').forEach(sw=>{
+  sw.classList.toggle('on',!!state[sw.dataset.t]);   // sync to defaults
+  sw.onclick=()=>{
+    const k=sw.dataset.t; state[k]=!state[k]; sw.classList.toggle('on',state[k]);
+    if(k==='grid')grid.visible=state[k];
+    tracks.forEach(applyVis);
+    rangeLine.visible=state.rangevec;
+  };
+});
+// per-jet control zone toggles (inside each readout box)
+document.querySelectorAll('.czt').forEach(btn=>{
+  const tk=tracks[+btn.dataset.cz];
+  if(!tk){ btn.style.display='none'; return; }
+  btn.classList.toggle('on',tk.czoneOn);
+  btn.onclick=()=>{ tk.czoneOn=!tk.czoneOn; btn.classList.toggle('on',tk.czoneOn); applyVis(tk); };
 });
 $('#trail').oninput=e=>{state.trail=+e.target.value;$('#trailv').textContent=state.trail?state.trail+' s':'off';};
 
@@ -829,10 +953,12 @@ function placeMenu(){
   viewsMenu.style.right=(innerWidth-r.right)+'px';
 }
 viewsBtn.onclick=e=>{e.stopPropagation();
+  panel.classList.remove('open');
   if(!viewsMenu.classList.contains('open')) placeMenu();
   viewsMenu.classList.toggle('open');};
 document.addEventListener('click',e=>{
-  if(!viewsWrap.contains(e.target) && !viewsMenu.contains(e.target)) viewsMenu.classList.remove('open');});
+  if(!viewsWrap.contains(e.target) && !viewsMenu.contains(e.target)) viewsMenu.classList.remove('open');
+  if(!gearBtn.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('open');});
 
 // zoom buttons (tap = step, hold = continuous)
 function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
@@ -950,6 +1076,11 @@ function frame(now){
       const endT=tk.P[tk.P.length-1][3], startT=tk.P[0][3];
       const sN=sampleAt(tk,Math.min(state.t+1,endT));
       const sP=sampleAt(tk,Math.max(state.t-1,startT));
+      // control zone: frustum swept aft along this jet's turn circle
+      if(tk.czone){
+        if(tk.czoneOn&&tk.vis) updateCZone(tk,s);
+        else tk.czone.visible=false;
+      }
       if(sN){
         const wN=worldPos([sN.e,sN.u,sN.n]);
         const wP=sP?worldPos([sP.e,sP.u,sP.n]):w.clone();
@@ -1016,6 +1147,7 @@ function frame(now){
       } else tk.trail.visible=false;
     } else {
       tk.marker.visible=false; tk.trail.visible=false;
+      if(tk.czone) tk.czone.visible=false;
       if(readEls[i])['alt','gs','vs','g','aon','aot'].forEach(f=>readEls[i][f].textContent='—');
     }
   });
@@ -1078,7 +1210,7 @@ rebuildGeometry();
 grid.visible=state.grid;
 // initial framing
 orbit.tgt.copy(new THREE.Vector3(0,800*SCALE*state.vx,0));
-orbit.r=2400;
+orbit.r=150;   // very close default zoom
 requestAnimationFrame(frame);
 
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
