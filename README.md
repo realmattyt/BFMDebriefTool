@@ -67,3 +67,10 @@ links (falls back to system fonts offline). Just share `bfm-debrief.html` direct
 
 It's a static site. Any static host works (GitHub Pages, Netlify, Cloudflare Pages, S3).
 With GitHub Pages: push this repo, then **Settings → Pages → Deploy from branch**.
+
+## License
+
+Copyright © 2026 Matthew Thomas. Licensed under the
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/)
+(see [`LICENSE`](LICENSE)). **Free for any noncommercial use** — personal, educational, and
+government/public-safety use included. Commercial use requires prior written permission.
