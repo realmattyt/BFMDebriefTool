@@ -9,17 +9,18 @@ attachment, or AirDrop, even with CDNs blocked and no internet at all.
 Users can still drop their own KML files; that has always run in-browser.
 
 Usage:
-    python3 build_standalone.py            # -> bfm-debrief.html
-"""
-import base64, os, sys
+    python3 build_standalone.py            # -> bfm-debrief-v<version>.html
 
-VERSION = "0.1"          # bump this for each release you send out
+The version (and the output filename) is read straight from index.html's
+<title>, so the standalone always matches the source — bump the version once
+in index.html and the build follows automatically.
+"""
+import base64, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC   = os.path.join(HERE, "index.html")
 THREE = os.path.join(HERE, "vendor", "three.module.min.js")
 DEMO  = os.path.join(HERE, "trackdata.js")
-OUT   = os.path.join(HERE, f"bfm-debrief-v{VERSION}.html")
 
 CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
 FONT_LINK = ('<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:'
@@ -37,6 +38,11 @@ def main():
     html  = read(SRC)
     three = read(THREE)
     demo  = read(DEMO)
+
+    # Version + output filename follow index.html's <title> (e.g. "...v0.2").
+    m = re.search(r"<title>[^<]*?v(\d+(?:\.\d+)+)", html)
+    version = m.group(1) if m else "0"
+    out = os.path.join(HERE, f"bfm-debrief-v{version}.html")
 
     # 1) Three.js -> base64 data: URL inside the existing importmap (code unchanged).
     b64 = base64.b64encode(three.encode("utf-8")).decode("ascii")
@@ -58,15 +64,13 @@ def main():
         html = html.replace(tag, "")
     html = html.replace("<head>\n", "<head>\n<!-- self-contained build: no external requests -->\n", 1)
 
-    # 4) Stamp the version into the landing screen and the tab title.
-    html = html.replace('<div id="ver">dev build</div>', f'<div id="ver">v{VERSION}</div>')
-    html = html.replace("<title>BFM Recreation", f"<title>BFM Recreation v{VERSION}", 1)
+    # (Title/version already live in index.html, so no stamping needed.)
 
-    with open(OUT, "w", encoding="utf-8") as f:
+    with open(out, "w", encoding="utf-8") as f:
         f.write(html)
 
-    size = os.path.getsize(OUT)
-    print(f"wrote {OUT}  ({size:,} bytes, {size/1_048_576:.1f} MB)")
+    size = os.path.getsize(out)
+    print(f"wrote {out}  ({size:,} bytes, {size/1_048_576:.1f} MB)")
     print("Fully self-contained: no CDN, no fonts, no trackdata.js needed. Share it directly.")
 
 if __name__ == "__main__":
