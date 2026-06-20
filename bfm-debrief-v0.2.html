@@ -869,12 +869,26 @@ const MERGE_FT=3000, MERGE_AON=90, MERGE_LOOKBACK=8;
 const merges=[];
 const hasPair=tracks.length>=2;
 if(hasPair)(function(){
-  // separation (ft) sampled at 1 s resolution
+  // separation (ft) between the jets at an arbitrary time. sampleAt interpolates
+  // between track points, so this is valid at sub-second t.
+  const sepAt=t=>{
+    const a=sampleAt(tracks[0],t), b=sampleAt(tracks[1],t);
+    return a&&b ? Math.hypot(a.e-b.e,a.u-b.u,a.n-b.n)*M2FT : Infinity;
+  };
+  // coarse pass at 1 s resolution to locate candidate passes
   const sep=[];
-  for(let s=0;s<=TMAX;s++){
-    const a=sampleAt(tracks[0],s), b=sampleAt(tracks[1],s);
-    sep.push(a&&b ? Math.hypot(a.e-b.e,a.u-b.u,a.n-b.n)*M2FT : Infinity);
-  }
+  for(let s=0;s<=TMAX;s++) sep.push(sepAt(s));
+  // the true closest-approach instant almost never lands on a whole second, so
+  // refine each candidate to ~0.02 s by scanning the [s-1, s+1] window. The
+  // reported merge time is then the exact moment of minimum separation — that's
+  // what the timeline tick and prev/next-merge buttons snap the ticker to.
+  const refine=s=>{
+    let bt=s, bs=sep[s];
+    for(let t=Math.max(0,s-1); t<=Math.min(TMAX,s+1)+1e-9; t+=0.02){
+      const d=sepAt(t); if(d<bs){ bs=d; bt=t; }
+    }
+    return {t:bt, sep:bs};
+  };
   const cand=[];
   for(let s=1;s<sep.length-1;s++){
     if(sep[s]<MERGE_FT && sep[s]<=sep[s-1] && sep[s]<sep[s+1]){
@@ -884,14 +898,17 @@ if(hasPair)(function(){
         const aonB=aonBetween(sampleAt(tracks[1],u),sampleAt(tracks[0],u),velVec(tracks[1],u));
         if(aonA!=null&&aonB!=null&&aonA<MERGE_AON&&aonB<MERGE_AON){ noseOn=true; break; }
       }
-      if(noseOn) cand.push(s);
+      if(noseOn) cand.push(refine(s));
     }
   }
-  // collapse minima within 20 s of each other, keeping the closest pass
-  for(const m of cand){
+  // collapse minima within 20 s of each other, keeping the closest pass. merges[]
+  // stays a plain array of times (now sub-second) so downstream consumers are
+  // unchanged.
+  let lastSep=Infinity;
+  for(const c of cand){
     const last=merges.length?merges[merges.length-1]:null;
-    if(last!=null && m-last<20){ if(sep[m]<sep[last]) merges[merges.length-1]=m; }
-    else merges.push(m);
+    if(last!=null && c.t-last<20){ if(c.sep<lastSep){ merges[merges.length-1]=c.t; lastSep=c.sep; } }
+    else { merges.push(c.t); lastSep=c.sep; }
   }
 })();
 
