@@ -1,6 +1,6 @@
 # BFM Debrief Tool
 
-A browser-based 3D dogfight debrief. Load two aircraft's [ForeFlight](https://foreflight.com)
+A browser-based 3D BFM debrief. Load two aircraft's [ForeFlight](https://foreflight.com)
 KML track logs and replay the engagement — synchronized on a shared clock, with slant range,
 closure rate, per-jet altitude/groundspeed/vertical-speed/G readouts, and the merge point
 marked on the timeline.
