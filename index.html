@@ -202,6 +202,10 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   .read{position:absolute;top:6px}
   #rd1{left:8px}
   #rd2{right:8px}
+  /* the transport is taller on mobile (controls wrap to two rows) and grows by
+     the home-indicator safe area, so lift the zoom column clear of the clock /
+     merge-count line. env() keeps the gap constant on notched phones. */
+  #zoom{bottom:calc(180px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
