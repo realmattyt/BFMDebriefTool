@@ -26,11 +26,12 @@ TARGETS = [
     ("IMG_0038.PNG", "07-ff-pick-flight.png",     [(0.0, 0.147, 0.43, 0.215)]),
     ("IMG_0037.PNG", "08-ff-export-share.png",    [(0.90, 0.035, 0.995, 0.075)]),
     ("IMG_0039.PNG", "09-ff-open-kml-in.png",     [(0.685, 0.115, 0.875, 0.205)]),
-    ("IMG_0040.PNG", "10-ff-save-to-files.png",   [(0.505, 0.282, 0.61, 0.372)]),
-    ("IMG_0050.PNG", "11-start-screen.png",   [(0.085, 0.42, 0.86, 0.57)]),
+    # two options in the same share sheet: AirDrop (top) and Save to Files (bottom)
+    ("IMG_0040.PNG", "10-ff-save-to-files.png",   [(0.515, 0.145, 0.625, 0.225), (0.505, 0.282, 0.61, 0.372)]),
+    ("IMG_0053.PNG", "11-start-screen.png",   [(0.07, 0.40, 0.92, 0.58)]),
     # replay / loaded shots — clean overviews, single callout where there's a next action
     ("IMG_0056.PNG", "12-replay-demo.png",    []),
-    ("IMG_0057.PNG", "13-start-loaded.png",   [(0.35, 0.598, 0.62, 0.645)]),
+    ("IMG_0057.PNG", "13-start-loaded.png",   [(0.34, 0.578, 0.66, 0.632)]),
     ("IMG_0058.PNG", "14-replay-loaded.png",  []),
 ]
 
