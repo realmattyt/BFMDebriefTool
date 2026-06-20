@@ -156,8 +156,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 /* landing / upload */
 #landing{position:fixed;inset:0;z-index:20;
   background:radial-gradient(120% 90% at 50% 0%,#0b141d,#05080c 70%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:20px;padding:24px;text-align:center}
+  display:flex;flex-direction:column;align-items:center;justify-content:safe center;
+  gap:20px;padding:24px;text-align:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #landing .brand{font:700 22px/1 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase}
 #landing .tag{font-size:11px;color:var(--dim);letter-spacing:.12em;margin-top:9px;
   max-width:440px;line-height:1.6}
@@ -192,10 +192,16 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 
 @media (max-width:560px){
   .read{width:122px;padding:6px 7px}
-  .reads-spacer{min-width:122px}
   #sep .rng{font-size:21px}
   #brand .sub{display:none}
   #brand h1{font-size:12px}
+  /* split the two jet readouts to opposite top corners, slant range centered */
+  #top{justify-content:center}
+  .reads-spacer{display:none}
+  .reads{display:contents}
+  .read{position:absolute;top:6px}
+  #rd1{left:8px}
+  #rd2{right:8px}
 }
 </style>
 </head>
@@ -246,7 +252,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
         <button data-v="free" class="on">Free Orbit</button>
       </div>
     </div>
-    <button id="gear">⚙ Display ▾</button>
+    <button id="gear">Display ▾</button>
   </div>
 </div>
 
