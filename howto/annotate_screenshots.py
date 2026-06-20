@@ -28,6 +28,8 @@ TARGETS = [
     ("IMG_0039.PNG", "09-ff-open-kml-in.png",     [(0.685, 0.115, 0.875, 0.205)]),
     # two options in the same share sheet: AirDrop (top) and Save to Files (bottom)
     ("IMG_0040.PNG", "10-ff-save-to-files.png",   [(0.515, 0.145, 0.625, 0.225), (0.505, 0.282, 0.61, 0.372)]),
+    # save-to-files picker: MDM blocks Downloads, so use On My iPad -> Edge
+    ("IMG_0044.PNG", "10b-save-to-edge.png",  [(0.085, 0.224, 0.445, 0.262), (0.78, 0.108, 0.945, 0.225)]),
     ("IMG_0053.PNG", "11-start-screen.png",   [(0.07, 0.40, 0.92, 0.58)]),
     # replay / loaded shots — clean overviews, single callout where there's a next action
     ("IMG_0056.PNG", "12-replay-demo.png",    []),
