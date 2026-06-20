@@ -24,11 +24,17 @@
   .cover .meta b{color:var(--ink)}
   .rule{height:6px;width:1.4in;background:linear-gradient(90deg,var(--j1),var(--j2));border-radius:3px;margin-top:.22in}
 
+  /* section divider headings */
+  .part{letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-size:12px;font-weight:700;
+    border-bottom:2px solid var(--line);padding-bottom:.06in;margin:.1in 0 .2in;page-break-after:avoid}
+
   /* steps */
-  .step{page-break-inside:avoid;margin:0 0 .34in}
+  .step{page-break-inside:avoid;margin:0 0 .3in}
   .step h2{font-size:19px;display:flex;align-items:baseline;gap:.14in;margin:0 0 .06in}
   .step h2 .n{flex:none;display:inline-flex;align-items:center;justify-content:center;
     width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:15px;font-weight:700}
+  .step h2 .once{flex:none;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--dim);border:1px solid var(--line);border-radius:10px;padding:1px 8px;align-self:center}
   .step p{margin:.06in 0 .1in}
   .step ul,.step ol{margin:.04in 0 .12in 0;padding-left:.32in}
   .step li{margin:.04in 0}
@@ -42,10 +48,18 @@
 
   /* screenshots */
   figure{margin:.1in 0 .14in .42in;page-break-inside:avoid}
-  figure img{display:block;width:3.6in;max-width:100%;border:1px solid var(--line);border-radius:8px}
+  figure img{display:block;width:2.5in;max-width:100%;border:1px solid var(--line);border-radius:8px}
   /* broken/missing image still reads as a labeled placeholder frame */
   figure img{min-height:1.6in;background:#f4f7f9}
-  figcaption{font-size:11px;color:var(--dim);margin-top:.05in;font-style:italic}
+  figcaption{font-size:11px;color:var(--dim);margin-top:.05in;font-style:italic;max-width:2.5in}
+  /* two screenshots side by side */
+  .figrow{display:flex;gap:.24in;flex-wrap:wrap;margin:.1in 0 .14in .42in;page-break-inside:avoid}
+  .figrow figure{margin:0}
+  /* placeholder frame for a screenshot still to be captured */
+  .ph{display:flex;align-items:center;justify-content:center;text-align:center;width:2.5in;min-height:1.9in;
+    border:2px dashed #c2ccd4;border-radius:8px;background:#f6f9fb;color:var(--dim);font-size:11px;
+    padding:.14in;line-height:1.45}
+  .ph b{color:var(--j2);display:block;letter-spacing:.04em;text-transform:uppercase;font-size:10px;margin-bottom:.04in}
   .shot{font-size:11px;color:var(--j2);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:.04in 0 .04in .42in}
 
   /* controls reference table */
@@ -68,36 +82,40 @@
     Watch the merge, scrub the timeline, and study range &amp; closure — right on your iPad.</div>
   <div class="rule"></div>
   <div class="meta">
-    Version <b>0.1</b> &nbsp;·&nbsp; Runs entirely on the device — nothing is uploaded.<br>
-    Questions or updated versions: <b>[your name / contact]</b>
+    Version <b>0.2</b> &nbsp;·&nbsp; Runs entirely on the device — nothing is uploaded.<br>
+    Questions or updated versions: <b>LCDR Matthew “Jojo” Thomas</b> &nbsp;·&nbsp; 301-473-3103
   </div>
 </section>
 
+<!-- ============ PART A: ONE-TIME SETUP ============ -->
+<div class="part">Part A · One-time setup</div>
+
 <!-- ============ STEP 1 ============ -->
 <section class="step">
-  <h2><span class="n">1</span> Install Microsoft Edge (one time)</h2>
-  <div class="lead">The tool is a single web page. iPad won’t run it in Safari from a file, but Microsoft Edge will.</div>
+  <h2><span class="n">1</span> Install Microsoft Edge <span class="once">one time</span></h2>
+  <div class="lead">The tool is a single web page. iPad won’t run it from a file in Safari, but Microsoft Edge will.</div>
   <ul>
-    <li>Open your company app catalog (the managed app/“Company Portal” icon).</li>
-    <li>Find <b>Microsoft Edge</b> and install it.</li>
+    <li>Open the <b>NAVAIR App Catalog</b> from your home screen.</li>
+    <li>Search for <b>Microsoft Edge</b> and install it (it’ll show <b>Installed</b> when done).</li>
   </ul>
   <div class="shot">Screenshot 01</div>
-  <figure><img src="screenshots/01-edge-in-catalog.png" alt="Screenshot 01 — Microsoft Edge shown in the company app catalog, ready to install">
-    <figcaption>The company catalog with Microsoft Edge available to install.</figcaption></figure>
+  <figure><img src="screenshots/01-edge-installed.png" alt="Screenshot 01 — Microsoft Edge shown as Installed in the NAVAIR App Catalog">
+    <figcaption>Microsoft Edge in the NAVAIR App Catalog, installed and ready.</figcaption></figure>
   <div class="note tip"><b>Why Edge?</b> It’s the one approved app that can both open the local file <i>and</i> let you pick your KML files. You only install it once.</div>
 </section>
 
 <!-- ============ STEP 2 ============ -->
 <section class="step">
-  <h2><span class="n">2</span> Get the tool file</h2>
-  <div class="lead">You’ll receive a single file named like <code>bfm-debrief-v0.2.html</code>.</div>
+  <h2><span class="n">2</span> Get the tool file <span class="once">one time</span></h2>
+  <div class="lead">It’s a single HTML file (about 1&nbsp;MB) named like <code>bfm-debrief-v0.2.html</code>.</div>
   <ul>
-    <li>Open the message/share I sent and <b>save the file to your iPad</b> (Files app).</li>
-    <li>The version number is in the filename — newer versions will be <code>v0.2</code>, <code>v0.3</code>, etc.</li>
+    <li><b>Contact me to get the current version</b> — I’ll send you the latest <code>bfm-debrief-vX.Y.html</code>.</li>
+    <li><b>Save it to your iPad</b> (Files app). The version number is in the filename — newer releases will be <code>v0.3</code>, <code>v0.4</code>, etc.</li>
   </ul>
   <div class="shot">Screenshot 02</div>
-  <figure><img src="screenshots/02-save-file.png" alt="Screenshot 02 — saving the bfm-debrief file to the Files app">
-    <figcaption>Saving <code>bfm-debrief-v0.2.html</code> to Files. <b>[capture however you’ll actually send it — email / Teams / shared drive]</b></figcaption></figure>
+  <figure><img src="screenshots/02-file-in-files.png" alt="Screenshot 02 — the bfm-debrief file saved in the iPad Files app">
+    <figcaption>The saved <code>bfm-debrief</code> file in the Files app.</figcaption></figure>
+  <div class="note"><b>Replacing an old version?</b> Just save the new file — each version is fully self-contained, so you can delete older ones once the new one works.</div>
 </section>
 
 <!-- ============ STEP 3 ============ -->
@@ -105,16 +123,16 @@
   <h2><span class="n">3</span> Open it in Edge</h2>
   <div class="lead">From the Files app, hand the file to Edge.</div>
   <ol>
-    <li>In <b>Files</b>, press and hold <code>bfm-debrief-v0.2.html</code>.</li>
-    <li>Tap <b>Share</b>.</li>
-    <li>Choose <b>Microsoft Edge</b> (tap <b>More</b> first if you don’t see it).</li>
+    <li>In <b>Files</b>, press and hold the <code>bfm-debrief</code> file.</li>
+    <li>Tap <b>Share</b>, then choose <b>Open in Microsoft Edge</b> (tap <b>More</b> first if you don’t see it).</li>
+    <li>The tool’s start screen loads in an Edge tab.</li>
   </ol>
-  <div class="note"><b>Confirm these taps:</b> this is the one device-specific step — please verify the exact path you used so it’s 100% right for everyone.</div>
-  <div class="shot">Screenshots 03–04</div>
-  <figure><img src="screenshots/03-share-sheet.png" alt="Screenshot 03 — the iOS Share sheet with Microsoft Edge as an option">
-    <figcaption>The Share sheet — choose Microsoft Edge.</figcaption></figure>
-  <figure><img src="screenshots/04-opened-in-edge.png" alt="Screenshot 04 — the tool's start screen open in Edge">
-    <figcaption>The tool’s start screen, now open in Edge.</figcaption></figure>
+  <div class="figrow">
+    <figure><img src="screenshots/03-open-in-edge.png" alt="Screenshot 03 — the Share sheet with Open in Microsoft Edge selected">
+      <figcaption>Share → <b>Open in Microsoft Edge</b>.</figcaption></figure>
+    <figure><img src="screenshots/04-tool-in-edge.png" alt="Screenshot 04 — the tool's start screen open in an Edge tab">
+      <figcaption>The start screen, now open in Edge.</figcaption></figure>
+  </div>
 </section>
 
 <!-- ============ STEP 4 ============ -->
@@ -123,42 +141,77 @@
   <div class="lead">See how it works before loading your own logs.</div>
   <ul>
     <li>On the start screen, tap <b>▶ View demo flight</b>.</li>
-    <li>The 3D replay loads, paused. Tap <b>PLAY</b> at the bottom to roll it.</li>
+    <li>The 3D replay loads, paused. Tap <b>PLAY</b> at the bottom to roll it; drag the 3D view to orbit.</li>
   </ul>
-  <div class="shot">Screenshot 05</div>
-  <figure><img src="screenshots/05-replay-demo.png" alt="Screenshot 05 — the 3D replay running with the demo data">
+  <div class="shot">Screenshot 05 — to capture</div>
+  <figure><div class="ph"><span><b>Screenshot needed</b>The demo replay running on the iPad — tap “View demo flight,” then PLAY, and grab the 3D view with the jets in frame.</span></div>
     <figcaption>The replay view with the demo engagement.</figcaption></figure>
 </section>
 
+<!-- ============ PART B: EACH DEBRIEF ============ -->
+<div class="part">Part B · Each debrief</div>
+
 <!-- ============ STEP 5 ============ -->
 <section class="step">
-  <h2><span class="n">5</span> Load your own flight</h2>
-  <div class="lead">Export each aircraft’s track log from ForeFlight as <b>KML</b>, then add them one at a time.</div>
+  <h2><span class="n">5</span> Export each jet’s track log from ForeFlight</h2>
+  <div class="lead">You’ll export <b>one KML per aircraft</b>, straight from ForeFlight on the iPad. Repeat for both jets.</div>
+  <div class="note tip"><b>Before you fly:</b> in ForeFlight <b>Settings → Track Log</b>, turn on <b>Enable Start/Stop Control</b> and <b>Enable Auto Start/Stop</b> so every hop is recorded automatically.</div>
+  <div class="shot">Screenshot 06</div>
+  <figure><img src="screenshots/05-ff-enable-tracklog.png" alt="Screenshot 06 — ForeFlight Track Log settings with start/stop recording enabled">
+    <figcaption>ForeFlight <b>Settings → Track Log</b>, recording enabled.</figcaption></figure>
   <ol>
-    <li>In the <b>Fighter</b> card (blue by default), optionally rename it or tap a different color, then tap <b>Choose KML file</b> and pick that jet’s <b>.kml</b>.</li>
-    <li>Do the same in the <b>Bandit</b> card (orange). Its file <b>can be in a different folder</b> — you pick each one separately.</li>
-    <li>Tap <b>Build replay</b>.</li>
+    <li>In ForeFlight, open the menu and tap <b>Track Logs</b>.</li>
+    <li>Pick the flight you want by <b>date</b> from the list.</li>
+    <li>Tap the <b>Share</b> icon (top right), then <b>Open KML in…</b>.</li>
+    <li>In the share sheet, tap <b>Save to Files</b> and choose a folder you’ll remember.</li>
   </ol>
-  <div class="note"><b>Tip:</b> the names and colors you set here label the two jets throughout the replay — readouts, traces, and the timeline.</div>
-  <div class="shot">Screenshots 06–07</div>
-  <figure><img src="screenshots/06-file-picker.png" alt="Screenshot 06 — choosing KML files from the Files picker">
-    <figcaption>Choosing your KML exports from Files.</figcaption></figure>
-  <figure><img src="screenshots/07-replay-own.png" alt="Screenshot 07 — the replay built from the user's own KML files">
-    <figcaption>Your own engagement, loaded.</figcaption></figure>
+  <div class="figrow">
+    <figure><img src="screenshots/06-ff-open-tracklogs.png" alt="Screenshot 07 — opening Track Logs from the ForeFlight menu">
+      <figcaption>Open <b>Track Logs</b> from the ForeFlight menu.</figcaption></figure>
+    <figure><img src="screenshots/07-ff-pick-flight.png" alt="Screenshot 08 — choosing the flight from the track-log list by date">
+      <figcaption>Pick the flight by date.</figcaption></figure>
+  </div>
+  <div class="figrow">
+    <figure><img src="screenshots/08-ff-export-share.png" alt="Screenshot 09 — the opened track log with the Share icon at top right">
+      <figcaption>Open the log, then tap <b>Share</b> (top right).</figcaption></figure>
+    <figure><img src="screenshots/09-ff-open-kml-in.png" alt="Screenshot 10 — the ForeFlight Send To menu with Open KML in selected">
+      <figcaption>Choose <b>Open KML in…</b>.</figcaption></figure>
+  </div>
+  <figure><img src="screenshots/10-ff-save-to-files.png" alt="Screenshot 11 — the iOS share sheet with Save to Files selected for the KML">
+    <figcaption>Tap <b>Save to Files</b> to store the <code>.kml</code>.</figcaption></figure>
+  <div class="note"><b>Do this for both jets.</b> Each aircraft’s log is separate — they can come from different iPads and live in different folders. You’ll pick each file individually in the next step.</div>
 </section>
 
 <!-- ============ STEP 6 ============ -->
 <section class="step">
-  <h2><span class="n">6</span> Getting around the replay</h2>
+  <h2><span class="n">6</span> Load your flight into the tool</h2>
+  <div class="lead">Back in the tool’s start screen (in Edge), add the two KMLs and build the replay.</div>
+  <ol>
+    <li>In the <b>Fighter</b> card (blue by default), optionally rename it or tap a different color, then tap <b>Choose KML file</b> and pick that jet’s <b>.kml</b>.</li>
+    <li>Do the same in the <b>Bandit</b> card (orange) with the other jet’s file.</li>
+    <li>Tap <b>Build replay</b>.</li>
+  </ol>
+  <div class="note"><b>Tip:</b> the names and colors you set here label the two jets everywhere in the replay — readouts, traces, and the timeline.</div>
+  <div class="figrow">
+    <figure><img src="screenshots/11-start-screen.png" alt="Screenshot 12 — the start screen with the Fighter and Bandit cards">
+      <figcaption>Name each jet, pick a color, choose its KML, then <b>Build replay</b>.</figcaption></figure>
+    <figure><div class="ph"><span><b>Screenshot needed</b>Your own engagement loaded — the 3D replay built from your two KMLs.</span></div>
+      <figcaption>Your engagement, loaded.</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ STEP 7 ============ -->
+<section class="step">
+  <h2><span class="n">7</span> Getting around the replay</h2>
   <div class="lead">Everything you need is in the top header and the bottom transport bar.</div>
   <table>
     <tr><th>Control</th><th>What it does</th></tr>
-    <tr><td><b>Drag on the 3D view</b></td><td>Orbit the camera. Pinch to zoom (or use the + / − buttons).</td></tr>
+    <tr><td><b>Drag on the 3D view</b></td><td>Orbit the camera. Pinch to zoom (or use the + / − buttons on the right).</td></tr>
     <tr><td><b>PLAY / timeline scrubber</b></td><td>Play, pause, and drag the playhead to any moment. Speed buttons: 1×–16×.</td></tr>
-    <tr><td><b>↦ Merge</b></td><td>Jump to the closest pass (the highlighted tick on the timeline).</td></tr>
+    <tr><td><b>◀ Merge / Merge ▶</b></td><td>Jump to the previous / next merge — the orange ticks on the timeline mark each pass, set to the exact moment of closest range.</td></tr>
     <tr><td><b>◳ Free Orbit ▾</b> (header)</td><td>Camera-view dropdown: God’s Eye, Chase J1/J2, Side, Free Orbit. The button shows the current view.</td></tr>
-    <tr><td><b>⚙ Display ▾</b> (header)</td><td>Display dropdown — toggle altitude curtains, range vector, traces, ground shadows, and grid, and set trail length.</td></tr>
-    <tr><td><b>Jet readouts</b> (top right)</td><td>Per-jet ALT, groundspeed, V/S, G, and angle-off nose/tail. Each box has a <b>Control Zone</b> toggle.</td></tr>
+    <tr><td><b>Display ▾</b> (header)</td><td>Display dropdown — toggle altitude curtains, range vector, traces, ground shadows, and grid, and set trail length.</td></tr>
+    <tr><td><b>Jet readouts</b> (top corners)</td><td>Per-jet ALT, groundspeed, V/S, G, and angle-off nose/tail. Each box has a <b>Control Zone</b> toggle.</td></tr>
     <tr><td><b>⊿ Control Zone</b> (in each jet box)</td><td>Shows that jet’s control zone — a cone along its turn circle marking the offensive position behind it.</td></tr>
     <tr><td><b>SLANT RANGE</b> (top center)</td><td>Live distance and closure rate between the jets.</td></tr>
   </table>
