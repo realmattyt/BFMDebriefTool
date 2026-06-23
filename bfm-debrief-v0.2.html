@@ -191,6 +191,27 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   font-size:11px;letter-spacing:.06em;cursor:pointer;padding:6px 10px}
 #aboutBtn:hover{color:var(--ink)}
 
+/* waypoint overlays (landing page) */
+#wptSection{margin-top:2px;width:min(604px,90vw);text-align:left}
+.wpt-hd{font:600 9px 'Chakra Petch';letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);text-align:center;margin-bottom:8px}
+.wpt-item{display:flex;align-items:center;gap:9px;padding:8px 12px;
+  background:#0a121bcc;border:1px solid var(--line);border-radius:7px;
+  font-size:11px;cursor:pointer;margin-bottom:6px;user-select:none}
+.wpt-item:hover{border-color:#2f4456}
+.wpt-item input[type=checkbox]{accent-color:var(--hud);width:15px;height:15px;cursor:pointer;flex:none}
+.wpt-item.disabled{opacity:.4;cursor:default}
+.wpt-item .wpt-color{width:10px;height:10px;border-radius:3px;flex:none}
+
+/* north-up compass */
+#compass{position:fixed;left:12px;bottom:148px;z-index:7;cursor:pointer;
+  width:44px;height:44px;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;backdrop-filter:blur(7px);
+  display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+#compass:hover{border-color:#2c6f82}
+#compass:active{background:#13303a}
+#compass svg{width:30px;height:30px}
+
 @media (max-width:560px){
   .read{width:122px;padding:6px 7px}
   #sep .rng{font-size:21px}
@@ -207,6 +228,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
      the home-indicator safe area, so lift the zoom column clear of the clock /
      merge-count line. env() keeps the gap constant on notched phones. */
   #zoom{bottom:calc(180px + env(safe-area-inset-bottom))}
+  #compass{bottom:calc(180px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
@@ -236,6 +258,10 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       <button class="pick">Choose KML file</button>
       <div class="fname">No file chosen</div>
     </div>
+  </div>
+  <div id="wptSection">
+    <div class="wpt-hd">WAYPOINT OVERLAYS (optional)</div>
+    <div id="wptList"></div>
   </div>
   <button id="buildBtn" disabled>Build replay</button>
   <div class="or">— or —</div>
@@ -312,6 +338,14 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <button id="zout" aria-label="Zoom out">−</button>
 </div>
 
+<div id="compass" title="Click to orient North up">
+  <svg viewBox="0 0 32 32" id="compassSvg">
+    <text x="16" y="5.5" text-anchor="middle" fill="#ff3b54" font-size="7" font-weight="700" font-family="Chakra Petch, sans-serif">N</text>
+    <polygon points="16,8 19.5,17 16,14.5 12.5,17" fill="#ff3b54"/>
+    <polygon points="16,24 12.5,17 16,19.5 19.5,17" fill="#5e7889"/>
+  </svg>
+</div>
+
 <div id="panel">
   <h3>Display</h3>
   <div class="opt"><span>Curtains</span><div class="sw" data-t="curtain"><i></i></div></div>
@@ -319,6 +353,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <div class="opt"><span>Traces</span><div class="sw" data-t="traces"><i></i></div></div>
   <div class="opt"><span>Shadows</span><div class="sw" data-t="shadow"><i></i></div></div>
   <div class="opt"><span>Grid</span><div class="sw" data-t="grid"><i></i></div></div>
+  <div class="opt" id="wptToggleRow" style="display:none"><span>Waypoints</span><div class="sw" data-t="waypoints"><i></i></div></div>
   <h3 style="margin-top:13px">Trail length</h3>
   <input id="trail" type="range" min="0" max="180" step="10" value="30">
   <div class="vx"><span class="dim">off</span><span id="trailv">30 s</span><span class="dim">180</span></div>
@@ -369,6 +404,24 @@ import * as THREE from 'three';
 const round1=x=>Math.round(x*10)/10;
 // jet color palette (Fighter defaults to blue, Bandit to orange)
 const PALETTE=['#39d6ff','#ff3b54','#ff7a2f','#9ad84a','#ffd23b','#c77dff'];
+
+const WAYPOINT_ROUTES=[
+  {id:'tam_nqi_ir135', label:'TAM — NQI / IR-135', color:'#ffd23b', waypoints:[
+    {name:'1. Terror Camp',  lat:27.3459001011446,  lon:-98.12422847280098},
+    {name:'2. Sweatshop',    lat:27.20047304741218, lon:-98.14274423597273},
+    {name:'3. INS #1',       lat:27.03219251758544, lon:-98.13940081553994},
+    {name:'4. Bordello',     lat:26.8925562664702,  lon:-98.13484394407575},
+    {name:'5. Sam Site',     lat:26.85588465880714, lon:-98.33088763375012},
+    {name:'6. Mig Base',     lat:26.72050842506632, lon:-98.56051551671253},
+    {name:'7. Kaffie',       lat:27.07596467891384, lon:-98.60110334348073},
+    {name:'8. Training Camp',lat:27.31820213291066, lon:-98.68029231975439},
+    {name:'9. Rail Yard',    lat:27.42722696508979, lon:-98.84763620583124},
+    {name:'10. Mine',        lat:27.62271010792919, lon:-98.82278426914367},
+    {name:'11. INS #2',      lat:27.77407077455658, lon:-98.84604894155773},
+    {name:'12. Freer Hangar',lat:27.88611489241125, lon:-98.59882317545561},
+  ]},
+  {id:'tam_njk_vr217', label:'TAM — NJK / VR-217', color:'#c77dff', waypoints:[]},
+];
 
 function parseKML(text){
   const xml=new DOMParser().parseFromString(text,'application/xml');
@@ -477,6 +530,26 @@ function buildTrackData(files){
     };
   });
 
+  // waypoint overlay checkboxes
+  const wptList=document.getElementById('wptList');
+  WAYPOINT_ROUTES.forEach(route=>{
+    const lbl=document.createElement('label');
+    lbl.className='wpt-item'+(route.waypoints.length?'':' disabled');
+    const cb=document.createElement('input');
+    cb.type='checkbox'; cb.dataset.wpt=route.id;
+    if(!route.waypoints.length) cb.disabled=true;
+    const dot=document.createElement('span');
+    dot.className='wpt-color'; dot.style.background=route.color;
+    const txt=document.createElement('span');
+    txt.textContent=route.label+(route.waypoints.length?'':' (coming soon)');
+    lbl.append(cb,dot,txt);
+    wptList.appendChild(lbl);
+  });
+  function getSelectedWaypoints(){
+    return WAYPOINT_ROUTES.filter(r=>
+      wptList.querySelector(`input[data-wpt="${r.id}"]`)?.checked && r.waypoints.length);
+  }
+
   buildBtn.onclick=async()=>{
     err.textContent='';
     const jets=cards.filter(c=>c._file).map(c=>{
@@ -487,17 +560,20 @@ function buildTrackData(files){
     try{
       const files=await Promise.all(jets.map(async j=>
         ({name:j.file.name, text:await j.file.text(), label:j.label, color:j.color})));
-      launch(buildTrackData(files));
+      const data=buildTrackData(files);
+      data.waypointRoutes=getSelectedWaypoints();
+      launch(data);
     }catch(e){ err.textContent='Could not read those files: '+e.message; }
   };
 
   // load demo data on demand with a cache-buster so it's always the latest
   demoBtn.onclick=()=>{
-    if(window.TRACK_DATA){ launch(window.TRACK_DATA); return; }
+    const attachWpt=d=>{d.waypointRoutes=getSelectedWaypoints();return d;};
+    if(window.TRACK_DATA){ launch(attachWpt(window.TRACK_DATA)); return; }
     err.textContent='Loading demo…';
     const s=document.createElement('script');
     s.src='trackdata.js?v='+Date.now();
-    s.onload=()=>{ if(window.TRACK_DATA){ err.textContent=''; launch(window.TRACK_DATA); }
+    s.onload=()=>{ if(window.TRACK_DATA){ err.textContent=''; launch(attachWpt(window.TRACK_DATA)); }
                    else err.textContent='Demo data failed to load.'; };
     s.onerror=()=>{ err.textContent='Demo data failed to load.'; };
     document.head.appendChild(s);
@@ -822,6 +898,66 @@ function buildGrid(){
 }
 buildGrid();
 
+// ---------- waypoint overlays ----------
+const hasWpt=(DATA.waypointRoutes||[]).length>0;
+const wptGroup=new THREE.Group();
+scene.add(wptGroup);
+function makeWptLabel(text,color){
+  const c=document.createElement('canvas'),ctx=c.getContext('2d');
+  c.width=512;c.height=96;
+  ctx.font='bold 36px Chakra Petch, sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.strokeStyle='#070b10';ctx.lineWidth=5;ctx.lineJoin='round';
+  ctx.strokeText(text,256,48);
+  ctx.fillStyle=color;ctx.fillText(text,256,48);
+  const tex=new THREE.CanvasTexture(c);
+  tex.minFilter=THREE.LinearFilter;
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false});
+  const sprite=new THREE.Sprite(mat);
+  sprite.scale.set(50,9.4,1);
+  return sprite;
+}
+function buildWaypoints(){
+  const routes=DATA.waypointRoutes||[];
+  if(!routes.length) return;
+  const mlat=110570.0, mlon=111320.0*Math.cos(DATA.ref.lat0*Math.PI/180);
+  routes.forEach(route=>{
+    const col=new THREE.Color(route.color);
+    const enuPts=route.waypoints.map(wp=>({
+      name:wp.name,
+      e:(wp.lon-DATA.ref.lon0)*mlon,
+      n:(wp.lat-DATA.ref.lat0)*mlat,
+    }));
+    enuPts.forEach(wp=>{
+      const base=worldPos([wp.e,0,wp.n]);
+      // vertical stem
+      const stemGeo=new THREE.BufferGeometry().setFromPoints([
+        base.clone(),new THREE.Vector3(base.x,5,base.z)]);
+      const stem=new THREE.Line(stemGeo,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.6}));
+      stem.frustumCulled=false; wptGroup.add(stem);
+      // diamond marker
+      const dia=new THREE.Mesh(new THREE.OctahedronGeometry(1.4,0),
+        new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.85}));
+      dia.position.set(base.x,5,base.z);dia.scale.y=1.4;
+      dia.frustumCulled=false; wptGroup.add(dia);
+      // label sprite
+      const label=makeWptLabel(wp.name,route.color);
+      label.position.set(base.x,10,base.z);
+      label.frustumCulled=false; wptGroup.add(label);
+    });
+    // route connecting line
+    if(enuPts.length>1){
+      const pts=enuPts.map(wp=>{const w=worldPos([wp.e,0,wp.n]);return new THREE.Vector3(w.x,0.5,w.z);});
+      const geo=new THREE.BufferGeometry().setFromPoints(pts);
+      const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.3}));
+      line.frustumCulled=false; wptGroup.add(line);
+    }
+  });
+  wptGroup.visible=state.waypoints;
+  const row=document.getElementById('wptToggleRow');
+  if(row) row.style.display='';
+}
+
 // ---------- interpolation ----------
 // first point index with time >= target
 function lb(P,time){let lo=0,hi=P.length;while(lo<hi){const m=(lo+hi)>>1;if(P[m][3]<time)lo=m+1;else hi=m;}return lo;}
@@ -851,7 +987,7 @@ function velVec(tk,sec){
 // ---------- state & time ----------
 const TMAX=DATA.tmax;
 const state={t:Math.min(DATA.start_at||0,TMAX),playing:false,speed:2,vx:1,
-  curtain:true,rangevec:true,traces:false,shadow:false,grid:true,
+  curtain:true,rangevec:true,traces:false,shadow:false,grid:true,waypoints:hasWpt,
   trail:30,view:'free'};
 
 // angle off own nose toward the other jet: angle between own velocity and LOS
@@ -987,6 +1123,7 @@ document.querySelectorAll('#panel .sw[data-t]').forEach(sw=>{
   sw.onclick=()=>{
     const k=sw.dataset.t; state[k]=!state[k]; sw.classList.toggle('on',state[k]);
     if(k==='grid')grid.visible=state[k];
+    if(k==='waypoints')wptGroup.visible=state[k];
     tracks.forEach(applyVis);
     rangeLine.visible=state.rangevec;
   };
@@ -1036,6 +1173,15 @@ function holdZoom(btn,f){
 }
 holdZoom($('#zin'),0.9);
 holdZoom($('#zout'),1.0/0.9);
+
+// north-up compass
+const compassSvg=$('#compassSvg');
+let compassTarget=null;
+$('#compass').onclick=()=>{
+  if(state.view==='chase1'||state.view==='chase2'||state.view==='side'){
+    state.view='free';markView();}
+  compassTarget=Math.PI/2;
+};
 
 // hold-to-rewind: scrub backward while pressed
 (function(){
@@ -1238,6 +1384,14 @@ function frame(now){
     rangeLine.visible=state.rangevec;
   } else { rngv.textContent='—'; clov.textContent='single-ship'; rangeLine.visible=false; prevSep=null; }
 
+  // compass north-up animation
+  if(compassTarget!=null){
+    let d=compassTarget-orbit.theta;
+    while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
+    if(Math.abs(d)<0.005){orbit.theta=compassTarget;compassTarget=null;}
+    else orbit.theta+=d*0.15;
+  }
+
   // camera target / chase
   if(nC>0)centroid.multiplyScalar(1/nC);
   if(state.view==='chase1'||state.view==='chase2'){
@@ -1266,11 +1420,17 @@ function frame(now){
   $('#fill').style.width=(state.t/TMAX*100)+'%';
   $('#knob').style.left=(state.t/TMAX*100)+'%';
 
+  // compass arrow rotation
+  camera.updateMatrixWorld();
+  const northCam=new THREE.Vector3(0,0,-1).transformDirection(camera.matrixWorldInverse);
+  compassSvg.style.transform='rotate('+Math.atan2(northCam.x,northCam.y)+'rad)';
+
   renderer.render(scene,camera);
   requestAnimationFrame(frame);
 }
 
 rebuildGeometry();
+buildWaypoints();
 grid.visible=state.grid;
 // initial framing
 orbit.tgt.copy(new THREE.Vector3(0,800*SCALE*state.vx,0));
