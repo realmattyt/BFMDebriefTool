@@ -21,6 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC   = os.path.join(HERE, "index.html")
 THREE = os.path.join(HERE, "vendor", "three.module.min.js")
 DEMO  = os.path.join(HERE, "trackdata.js")
+OVERLAYS = os.path.join(HERE, "overlays.js")
 
 CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
 FONT_LINK = ('<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:'
@@ -35,9 +36,10 @@ def read(p):
         return f.read()
 
 def main():
-    html  = read(SRC)
-    three = read(THREE)
-    demo  = read(DEMO)
+    html     = read(SRC)
+    three    = read(THREE)
+    demo     = read(DEMO)
+    overlays = read(OVERLAYS)
 
     # Version + output filename follow index.html's <title> (e.g. "...v0.2").
     m = re.search(r"<title>[^<]*?v(\d+(?:\.\d+)+)", html)
@@ -51,13 +53,20 @@ def main():
         sys.exit("could not find the Three.js CDN URL in index.html — did the importmap change?")
     html = html.replace(CDN_URL, data_url)
 
-    # 2) Inline the demo data so the "View demo flight" button works offline.
+    # 2) Inline the map-overlay data (airspaces + TAM routes) in place of its
+    #    <script src> so detection/overlays work offline.
+    overlays_tag = '<script src="overlays.js"></script>'
+    if overlays_tag not in html:
+        sys.exit("could not find the overlays.js <script> tag in index.html")
+    html = html.replace(overlays_tag, "<script>/* inlined overlay data */\n" + overlays.strip() + "\n</script>")
+
+    # 3) Inline the demo data so the "View demo flight" button works offline.
     #    (The on-demand loader short-circuits when window.TRACK_DATA already exists.)
     inline_demo = "<script>/* inlined demo data */\n" + demo.strip() + "\n</script>\n"
     marker = '<script type="importmap">'
     html = html.replace(marker, inline_demo + marker, 1)
 
-    # 3) Drop all Google Fonts <link>s (they would fail offline; CSS already has fallbacks).
+    # 4) Drop all Google Fonts <link>s (they would fail offline; CSS already has fallbacks).
     for tag in (FONT_LINK,
                 '<link rel="preconnect" href="https://fonts.googleapis.com">',
                 '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'):
