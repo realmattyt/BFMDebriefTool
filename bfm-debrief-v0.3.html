@@ -190,6 +190,10 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 #aboutBtn{background:none;border:0;color:var(--dim);font-family:'Azeret Mono',monospace;
   font-size:11px;letter-spacing:.06em;cursor:pointer;padding:6px 10px}
 #aboutBtn:hover{color:var(--ink)}
+#dlBtn{display:inline-block;font-family:'Azeret Mono',monospace;font-size:11px;
+  letter-spacing:.06em;color:var(--dim);text-decoration:none;border:1px solid var(--line);
+  border-radius:7px;padding:8px 16px;cursor:pointer}
+#dlBtn:hover{color:var(--ink);border-color:#2f4456}
 
 /* waypoint overlays (landing page) */
 #wptSection{margin-top:2px;width:min(604px,90vw);text-align:left}
@@ -280,6 +284,7 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <div class="or">— or —</div>
   <button id="demoBtn">▶ View demo flight</button>
   <div id="lerr"></div>
+  <a id="dlBtn" hidden>⤓ Save offline copy</a>
   <button id="aboutBtn">ⓘ About &amp; contact</button>
 </div>
 
@@ -521,6 +526,19 @@ function buildTrackData(files){
     launched=true;
     landing.style.display='none';
     startViewer(data);
+  }
+
+  // "Save offline copy" link — points at the versioned standalone next to this page.
+  // Version is read from the brand tag so it auto-tracks releases. Shown only on the
+  // live http(s) site; in the downloaded standalone (file://) the link would be dead.
+  const dlBtn=document.getElementById('dlBtn');
+  if(location.protocol==='http:'||location.protocol==='https:'){
+    const ver=(document.querySelector('.vtag')?.textContent||'').trim();  // e.g. "v0.3"
+    const file='bfm-debrief-'+ver+'.html';
+    dlBtn.href=file;
+    dlBtn.setAttribute('download',file);
+    dlBtn.textContent='⤓ Save offline copy ('+ver+')';
+    dlBtn.hidden=false;
   }
 
   // about / info modal (landing page only)
