@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  BFM Debrief Tool v0.3
+  Required Notice: Copyright © 2026 Matthew Thomas
+  Licensed under the PolyForm Noncommercial License 1.0.0
+  https://polyformproject.org/licenses/noncommercial/1.0.0/  (see LICENSE)
+  Free for noncommercial use. No commercial use without written permission.
+-->
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<title>BFM Debrief Tool v0.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b10; --panel:#0c1219cc; --line:#1b2935;
+  --ink:#cde3ef; --dim:#5e7889; --faint:#33485a;
+  --j1:#39d6ff; --j2:#ff7a2f; --rng:#9ad84a; --warn:#ff3b54;
+  --hud:#7fe3b0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);
+  font-family:'Azeret Mono',monospace;color:var(--ink);-webkit-text-size-adjust:100%}
+#stage{position:fixed;inset:0}
+canvas{display:block}
+
+.t{font-family:'Chakra Petch',sans-serif;letter-spacing:.06em}
+.up{text-transform:uppercase}
+.dim{color:var(--dim)} .faint{color:var(--faint)}
+
+/* header bar */
+#header{position:fixed;top:0;left:0;right:0;z-index:9;display:flex;align-items:center;
+  gap:14px;padding:7px 12px;min-height:46px;
+  background:linear-gradient(180deg,#070b10f7,#070b10d6);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(9px)}
+#brand{flex:none;line-height:1.1}
+#brand h1{font:600 14px/1 'Chakra Petch';letter-spacing:.14em;text-transform:uppercase}
+#brand .sub{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.08em}
+.vtag{text-transform:none;color:var(--dim);font-weight:600;letter-spacing:.02em;font-size:.78em}
+#hctrl{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto}
+#hctrl::-webkit-scrollbar{height:0}
+#viewsWrap{position:relative;flex:none}
+
+/* about / info modal */
+#about{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
+  background:#04070bcc;backdrop-filter:blur(3px);padding:24px}
+#about.open{display:flex}
+.about-card{background:var(--panel);border:1px solid var(--line);border-radius:13px;
+  padding:22px 28px;max-width:340px;text-align:center;backdrop-filter:blur(10px)}
+.about-card h3{font:700 15px 'Chakra Petch';letter-spacing:.1em;text-transform:uppercase;margin-bottom:15px}
+.about-card p{font-size:12px;line-height:1.7;margin:7px 0}
+.about-card a{color:var(--hud);text-decoration:none}
+.about-card .lic{font-size:10px;line-height:1.6;margin-top:14px;letter-spacing:.02em}
+#aboutClose{margin-top:18px}
+
+/* top bar (HUD readouts + range), sits below the header */
+#top{position:fixed;top:46px;left:0;right:0;display:flex;gap:0;
+  padding:9px 12px;align-items:flex-start;justify-content:space-between;
+  background:linear-gradient(180deg,#070b10ee,#070b1000);pointer-events:none;z-index:5}
+
+/* range/closure HUD center-top */
+#sep{pointer-events:none;text-align:center;font-family:'Chakra Petch';margin-top:-1px}
+#sep .rng{font-size:26px;font-weight:700;letter-spacing:.04em;line-height:1;color:var(--rng)}
+#sep .rng.hot{color:var(--warn)}
+#sep .rlbl{font-size:9px;color:var(--dim);letter-spacing:.22em;margin-top:3px}
+#sep .clo{font-size:11px;margin-top:4px;color:var(--ink)}
+
+/* jet readouts (both stacked in a column on the right) */
+.reads{display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:flex-end}
+.reads-spacer{min-width:150px}
+.read{width:150px;background:var(--panel);border:1px solid var(--line);
+  border-radius:7px;padding:7px 9px;pointer-events:auto;backdrop-filter:blur(7px)}
+.read .nm{display:flex;align-items:center;gap:6px;font:700 12px 'Chakra Petch';letter-spacing:.1em}
+.dot{width:9px;height:9px;border-radius:2px;flex:none;box-shadow:0 0 8px currentColor}
+.read .row{display:flex;justify-content:space-between;font-size:11px;margin-top:4px;gap:10px}
+.read .row b{font-weight:600;font-variant-numeric:tabular-nums}
+.read .row .k{color:var(--dim);font-size:9px;letter-spacing:.1em;align-self:center}
+.read.r1{border-color:#1d4655} .read.r2{border-color:#5a3318}
+/* per-jet control-zone toggle, inside each readout box */
+.read .czt{margin-top:8px;width:100%;font-family:'Chakra Petch';font-size:9px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--dim);
+  background:#0e1620;border:1px solid var(--line);border-radius:5px;
+  padding:6px 7px;cursor:pointer;pointer-events:auto}
+.read .czt.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
+
+/* bottom transport */
+#bottom{position:fixed;left:0;right:0;bottom:0;z-index:6;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,#070b10f2,#070b1000)}
+#clock{font-family:'Chakra Petch';font-size:13px;letter-spacing:.08em;
+  display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+#clock .z{font-size:18px;font-weight:700}
+#clock .el{color:var(--dim);font-size:11px}
+#scrub{position:relative;height:30px;margin:2px 0 8px;touch-action:none;cursor:pointer}
+#track{position:absolute;top:13px;left:0;right:0;height:4px;border-radius:2px;
+  background:var(--faint);overflow:hidden}
+#fill{position:absolute;height:100%;width:0;background:var(--hud);box-shadow:0 0 10px var(--hud)}
+/* per-jet activity bands */
+.band{position:absolute;height:3px;border-radius:2px;top:23px;opacity:.85}
+#knob{position:absolute;top:7px;width:3px;height:16px;background:#fff;
+  box-shadow:0 0 10px #fff;transform:translateX(-50%)}
+.mtick{position:absolute;top:4px;width:0;height:0;border-left:5px solid transparent;
+  border-right:5px solid transparent;border-top:7px solid var(--warn);
+  transform:translateX(-50%);pointer-events:auto;cursor:help}
+
+.ctrls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+button{font-family:'Chakra Petch';font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink);background:#0e1620;border:1px solid var(--line);border-radius:6px;
+  padding:8px 11px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+button:hover{border-color:#2f4456}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line)}
+button.on{background:#13303a;border-color:#2c6f82;color:#bff0ff}
+button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-width:54px;font-weight:700}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.spd{min-width:40px;text-align:center}
+
+/* settings drawer */
+#panel{position:fixed;top:54px;right:12px;width:212px;z-index:10;
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:11px;backdrop-filter:blur(10px);display:none}
+#panel.open{display:block}
+#panel h3{font:700 10px 'Chakra Petch';letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:8px}
+.opt{display:flex;justify-content:space-between;align-items:center;margin:8px 0;font-size:11px}
+.sw{width:38px;height:20px;border-radius:11px;background:#1b2935;position:relative;cursor:pointer;flex:none}
+.sw.on{background:#2c6f82}
+.sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:#cde3ef;transition:left .15s}
+.sw.on i{left:20px}
+#panel input[type=range]{width:100%;margin-top:6px;accent-color:var(--hud)}
+.vx{font-size:11px;display:flex;justify-content:space-between}
+
+/* camera-view dropdown (moved to <body> at runtime; positioned under the button) */
+#views{position:fixed;top:54px;right:12px;z-index:30;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;
+  display:none;flex-direction:column;gap:4px;backdrop-filter:blur(10px);min-width:140px}
+#views.open{display:flex}
+#views button{text-align:left;white-space:nowrap}
+
+#zoom{position:fixed;right:12px;bottom:148px;z-index:7;display:flex;flex-direction:column;gap:6px}
+#zoom button{width:46px;height:46px;padding:0;font-size:22px;font-weight:600;line-height:1;
+  display:flex;align-items:center;justify-content:center;border-radius:8px}
+#zoom button:active{background:#13303a;border-color:#2c6f82}
+
+#hint{position:fixed;left:0;right:0;bottom:120px;text-align:center;font-size:10px;
+  color:var(--faint);pointer-events:none;letter-spacing:.1em;z-index:4}
+
+/* landing / upload */
+#landing{position:fixed;inset:0;z-index:20;
+  background:radial-gradient(120% 90% at 50% 0%,#0b141d,#05080c 70%);
+  display:flex;flex-direction:column;align-items:center;justify-content:safe center;
+  gap:20px;padding:24px;text-align:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#landing .brand{font:700 22px/1 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase}
+#landing .tag{font-size:11px;color:var(--dim);letter-spacing:.12em;margin-top:9px;
+  max-width:440px;line-height:1.6}
+/* per-jet upload cards */
+#jets{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.jetcard{width:min(290px,90vw);background:#0a121bcc;border:1px solid var(--line);
+  border-top:3px solid var(--jc,#39d6ff);border-radius:12px;padding:14px;text-align:left}
+.jetcard .hd{font:700 10px 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:8px}
+.jetname{width:100%;background:#0e1620;border:1px solid var(--line);border-radius:7px;color:var(--ink);
+  font-family:'Chakra Petch';font-size:15px;font-weight:600;padding:8px 10px;letter-spacing:.04em}
+.jetname:focus{outline:none;border-color:#2c6f82}
+.swatches{display:flex;gap:7px;margin:11px 0 12px}
+.sw2{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex:none}
+.sw2.sel{border-color:#fff;box-shadow:0 0 0 1px #05080c,0 0 8px currentColor}
+.pick{width:100%}
+.fname{font-size:11px;color:var(--dim);margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fname.has{color:var(--hud)}
+#landing .or{font-size:10px;color:var(--faint);letter-spacing:.22em}
+#buildBtn{font-family:'Chakra Petch';font-size:13px;letter-spacing:.08em;text-transform:uppercase;
+  color:#04140d;background:var(--hud);border:1px solid var(--hud);border-radius:7px;
+  padding:12px 26px;cursor:pointer;font-weight:700}
+#buildBtn:disabled{opacity:.35;cursor:not-allowed}
+#demoBtn{font-family:'Chakra Petch';font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink);background:#0e1620;border:1px solid var(--line);border-radius:7px;
+  padding:10px 20px;cursor:pointer;font-weight:600}
+#demoBtn:hover{border-color:#2f4456}
+#lerr{color:var(--warn);font-size:11px;min-height:14px;letter-spacing:.04em}
+#aboutBtn{background:none;border:0;color:var(--dim);font-family:'Azeret Mono',monospace;
+  font-size:11px;letter-spacing:.06em;cursor:pointer;padding:6px 10px}
+#aboutBtn:hover{color:var(--ink)}
+#dlBtn{display:inline-block;font-family:'Azeret Mono',monospace;font-size:11px;
+  letter-spacing:.06em;color:var(--dim);text-decoration:none;border:1px solid var(--line);
+  border-radius:7px;padding:8px 16px;cursor:pointer}
+#dlBtn:hover{color:var(--ink);border-color:#2f4456}
+
+/* waypoint overlays (landing page) */
+#wptSection{margin-top:2px;width:min(604px,90vw);text-align:left}
+.wpt-hd{font:600 9px 'Chakra Petch';letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);text-align:center;margin-bottom:8px}
+.wpt-item{display:flex;align-items:center;gap:9px;padding:8px 12px;
+  background:#0a121bcc;border:1px solid var(--line);border-radius:7px;
+  font-size:11px;cursor:pointer;margin-bottom:6px;user-select:none}
+.wpt-item:hover{border-color:#2f4456}
+.wpt-item input[type=checkbox]{accent-color:var(--hud);width:15px;height:15px;cursor:pointer;flex:none}
+.wpt-item.disabled{opacity:.4;cursor:default}
+.wpt-item .wpt-color{width:10px;height:10px;border-radius:3px;flex:none}
+.wpt-grp{font:600 8px 'Chakra Petch';letter-spacing:.18em;text-transform:uppercase;
+  color:var(--faint);margin:10px 2px 5px;text-align:left}
+.wpt-grp:first-child{margin-top:0}
+.wpt-badge{margin-left:auto;font:700 8px 'Chakra Petch';letter-spacing:.12em;text-transform:uppercase;
+  color:#04140d;background:var(--hud);border-radius:4px;padding:2px 6px}
+
+/* north-up compass */
+#compass{position:fixed;left:12px;bottom:148px;z-index:7;cursor:pointer;
+  width:44px;height:44px;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;backdrop-filter:blur(7px);
+  display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+#compass:hover{border-color:#2c6f82}
+#compass:active{background:#13303a}
+#compass svg{width:30px;height:30px}
+
+@media (max-width:560px){
+  .read{width:122px;padding:6px 7px}
+  #sep .rng{font-size:21px}
+  #brand .sub{display:none}
+  #brand h1{font-size:12px}
+  /* split the two jet readouts to opposite top corners, slant range centered */
+  #top{justify-content:center}
+  .reads-spacer{display:none}
+  .reads{display:contents}
+  .read{position:absolute;top:6px}
+  #rd1{left:8px}
+  #rd2{right:8px}
+  /* the transport is taller on mobile (controls wrap to two rows) and grows by
+     the home-indicator safe area, so lift the zoom column clear of the clock /
+     merge-count line. env() keeps the gap constant on notched phones. */
+  #zoom{bottom:calc(180px + env(safe-area-inset-bottom))}
+  #compass{bottom:calc(180px + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div id="landing">
+  <div>
+    <div class="brand">BFM Debrief Tool <span class="vtag">v0.3</span></div>
+    <div class="tag">3D debrief from your ForeFlight track logs. Add each jet's KML
+      separately — they can be in different folders. Everything runs on your device; nothing is uploaded.</div>
+  </div>
+  <div id="jets">
+    <div class="jetcard" data-i="0">
+      <div class="hd">Jet 1</div>
+      <input class="jetname" type="text" value="Fighter" maxlength="20" spellcheck="false" autocapitalize="words">
+      <div class="swatches"></div>
+      <!-- No accept filter on purpose: iPadOS types a .kml by the UTI of whatever
+           app "owns" it (ForeFlight stamps its own private type), so an accept list
+           grays out the file unless Google Earth is installed to register the public
+           KML type. We validate the KML contents after selection instead. -->
+      <input type="file" class="kml" hidden>
+      <button class="pick">Choose KML file</button>
+      <div class="fname">No file chosen</div>
+    </div>
+    <div class="jetcard" data-i="1">
+      <div class="hd">Jet 2</div>
+      <input class="jetname" type="text" value="Bandit" maxlength="20" spellcheck="false" autocapitalize="words">
+      <div class="swatches"></div>
+      <!-- No accept filter on purpose: iPadOS types a .kml by the UTI of whatever
+           app "owns" it (ForeFlight stamps its own private type), so an accept list
+           grays out the file unless Google Earth is installed to register the public
+           KML type. We validate the KML contents after selection instead. -->
+      <input type="file" class="kml" hidden>
+      <button class="pick">Choose KML file</button>
+      <div class="fname">No file chosen</div>
+    </div>
+  </div>
+  <div id="wptSection">
+    <div class="wpt-hd">MAP OVERLAYS · airspace auto-detects from your tracks</div>
+    <div id="wptList"></div>
+  </div>
+  <button id="buildBtn" disabled>Build replay</button>
+  <div class="or">— or —</div>
+  <button id="demoBtn">▶ View demo flight</button>
+  <div id="lerr"></div>
+  <a id="dlBtn" hidden>⤓ Save offline copy</a>
+  <button id="aboutBtn">ⓘ About &amp; contact</button>
+</div>
+
+<div id="header">
+  <div id="brand"><h1>BFM Debrief Tool <span class="vtag">v0.3</span></h1><div class="sub" id="subt">17 JUN 2026</div></div>
+  <div id="hctrl">
+    <div id="viewsWrap">
+      <button id="viewsBtn">◳ Free Orbit ▾</button>
+      <div id="views">
+        <button data-v="god">God's Eye</button>
+        <button data-v="chase1">Chase J1</button>
+        <button data-v="chase2">Chase J2</button>
+        <button data-v="side">Side</button>
+        <button data-v="free" class="on">Free Orbit</button>
+      </div>
+    </div>
+    <button id="gear">Display ▾</button>
+  </div>
+</div>
+
+<div id="about">
+  <div class="about-card">
+    <h3>BFM Debrief Tool <span class="vtag">v0.3</span></h3>
+    <p>Created by<br><b>LCDR Matthew "Jojo" Thomas</b></p>
+    <p class="dim">Cell: <a href="tel:+13014733103">301-473-3103</a></p>
+    <p class="lic dim">© 2026 · <a href="https://polyformproject.org/licenses/noncommercial/1.0.0/" target="_blank" rel="noopener">PolyForm Noncommercial 1.0.0</a><br>Free for noncommercial use.</p>
+    <button id="aboutClose">Close</button>
+  </div>
+</div>
+
+<div id="top">
+  <div class="reads-spacer"></div>
+
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div id="sep">
+      <div class="rng" id="rngv">—</div>
+      <div class="rlbl">SLANT RANGE</div>
+      <div class="clo" id="clov">—</div>
+    </div>
+  </div>
+
+  <div class="reads">
+    <div class="read r1" id="rd1">
+      <div class="nm"><span class="dot" style="color:var(--j1)"></span><span>JET 1</span></div>
+      <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
+      <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
+      <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
+      <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+      <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
+      <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+      <button class="czt" data-cz="0">⊿ Control Zone</button>
+    </div>
+
+    <div class="read r2" id="rd2">
+      <div class="nm"><span class="dot" style="color:var(--j2)"></span><span>JET 2</span></div>
+      <div class="row"><span class="k">ALT</span><b data-f="alt">—</b></div>
+      <div class="row"><span class="k">GS</span><b data-f="gs">—</b></div>
+      <div class="row"><span class="k">V/S</span><b data-f="vs">—</b></div>
+      <div class="row"><span class="k">G</span><b data-f="g">—</b></div>
+      <div class="row"><span class="k">AON</span><b data-f="aon">—</b></div>
+      <div class="row"><span class="k">AOT</span><b data-f="aot">—</b></div>
+      <button class="czt" data-cz="1">⊿ Control Zone</button>
+    </div>
+  </div>
+</div>
+
+<div id="zoom">
+  <button id="zin" aria-label="Zoom in">+</button>
+  <button id="zout" aria-label="Zoom out">−</button>
+</div>
+
+<!-- TEST: non-standard-temperature altitude correction panel -->
+<div id="tcorr" style="position:fixed;left:12px;bottom:128px;z-index:7;width:188px;
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 11px;
+  font-family:'Chakra Petch',sans-serif;color:var(--ink);backdrop-filter:blur(7px)">
+  <label style="display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;cursor:pointer">
+    <input type="checkbox" id="tcOn" checked> Temp-corrected ALT
+  </label>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;font-size:10px;
+    letter-spacing:.05em;text-transform:uppercase;color:#7f97a8">
+    <span>Surface temp</span><b id="tcTemp" style="color:var(--ink);font-size:13px">95°F</b>
+  </div>
+  <input type="range" id="tcSlider" min="40" max="115" step="1" value="95" style="width:100%;margin-top:5px">
+  <div id="tcInfo" style="font-size:10px;color:#7f97a8;margin-top:6px;line-height:1.4">—</div>
+</div>
+
+<div id="compass" title="Click to orient North up">
+  <svg viewBox="0 0 32 32" id="compassSvg">
+    <text x="16" y="5.5" text-anchor="middle" fill="#ff3b54" font-size="7" font-weight="700" font-family="Chakra Petch, sans-serif">N</text>
+    <polygon points="16,8 19.5,17 16,14.5 12.5,17" fill="#ff3b54"/>
+    <polygon points="16,24 12.5,17 16,19.5 19.5,17" fill="#5e7889"/>
+  </svg>
+</div>
+
+<div id="panel">
+  <h3>Display</h3>
+  <div class="opt"><span>Curtains</span><div class="sw" data-t="curtain"><i></i></div></div>
+  <div class="opt"><span>Range vector</span><div class="sw" data-t="rangevec"><i></i></div></div>
+  <div class="opt"><span>Traces</span><div class="sw" data-t="traces"><i></i></div></div>
+  <div class="opt"><span>Shadows</span><div class="sw" data-t="shadow"><i></i></div></div>
+  <div class="opt"><span>Grid</span><div class="sw" data-t="grid"><i></i></div></div>
+  <div class="opt" id="wptToggleRow" style="display:none"><span>Overlays</span><div class="sw" data-t="waypoints"><i></i></div></div>
+  <h3 style="margin-top:13px">Trail length</h3>
+  <input id="trail" type="range" min="0" max="180" step="10" value="30">
+  <div class="vx"><span class="dim">off</span><span id="trailv">30 s</span><span class="dim">180</span></div>
+</div>
+
+<div id="hint">DRAG orbit · PINCH/SCROLL zoom · scrub timeline below</div>
+
+<div id="bottom">
+  <div id="clock">
+    <span class="z" id="zt">20:35:59Z</span>
+    <span class="el" id="elt">T+00:00 / 1:07:18 · — MERGES</span>
+  </div>
+  <div id="scrub">
+    <div id="track"><div id="fill"></div></div>
+    <div class="band" id="b1" style="background:var(--j1)"></div>
+    <div class="band" id="b2" style="background:var(--j2)"></div>
+    <div id="knob"></div>
+  </div>
+  <div class="ctrls">
+    <button class="play" id="play">PLAY</button>
+    <button id="rewind">◀◀ Rew</button>
+    <div class="seg" id="spd">
+      <button data-s="1">1×</button><button data-s="2" class="on">2×</button>
+      <button data-s="4">4×</button><button data-s="8">8×</button><button data-s="16">16×</button>
+    </div>
+    <button id="mprev">◀ Merge</button>
+    <button id="mnext">Merge ▶</button>
+    <button id="rew">⟲ Start</button>
+  </div>
+</div>
+
+<script src="overlays.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ============================================================
+// KML -> TRACK_DATA  (JS port of convert.py \u2014 runs in-browser)
+//   x = East (m), y = Up (m), z = North (m), relative to mean lat/lon.
+//   Each sample is [E, Up, North, t_seconds_since_shared_epoch].
+// ============================================================
+const round1=x=>Math.round(x*10)/10;
+// jet color palette (Fighter defaults to blue, Bandit to orange)
+const PALETTE=['#39d6ff','#ff3b54','#ff7a2f','#9ad84a','#ffd23b','#c77dff'];
+
+// Map overlays (airspaces + TAM routes) generated by convert_overlays.py from
+// the raw KML/KMZ files. Loaded from overlays.js (inlined in the standalone).
+// Each: {id, kind:'airspace'|'route', label, color, region:{lat/lon box},
+//        areas:[{name,coords:[[lon,lat]..]}], lines:[...], waypoints:[{name,lat,lon}]}.
+const OVERLAYS=(window.OVERLAYS||[]).map(o=>({waypoints:[],areas:[],lines:[],...o}));
+
+// Does a lat/lon sit inside an overlay's detection box?
+const inRegion=(r,lat,lon)=>r&&lat>=r.latMin&&lat<=r.latMax&&lon>=r.lonMin&&lon<=r.lonMax;
+// Which airspace does a flight centroid fall in? Returns the single nearest-centre
+// match (the airspaces are hundreds of miles apart, so this is unambiguous; the
+// nearest-centre tie-break only guards against padded boxes touching).
+function detectAirspace(lat,lon){
+  let best=null,bestD=Infinity;
+  for(const o of OVERLAYS){
+    if(o.kind!=='airspace'||!inRegion(o.region,lat,lon)) continue;
+    const cx=(o.region.lonMin+o.region.lonMax)/2, cy=(o.region.latMin+o.region.latMax)/2;
+    const d=(lon-cx)**2+(lat-cy)**2;
+    if(d<bestD){ bestD=d; best=o; }
+  }
+  return best;
+}
+
+function parseKML(text){
+  const xml=new DOMParser().parseFromString(text,'application/xml');
+  if(xml.querySelector('parsererror')) throw new Error('not valid XML');
+  const whens=[], coords=[];
+  // namespace-agnostic: <when> and <gx:coord> ("lon lat alt")
+  for(const el of xml.getElementsByTagName('*')){
+    const tag=el.localName;
+    if(tag==='when'){ whens.push(el.textContent.trim()); }
+    else if(tag==='coord'){
+      const p=el.textContent.trim().split(/\s+/).map(Number);
+      if(p.length>=3 && p.every(n=>!Number.isNaN(n))) coords.push([p[0],p[1],p[2]]);
+    }
+  }
+  if(!coords.length) throw new Error('no <gx:coord> samples found \u2014 is this a ForeFlight track log?');
+  return {whens,coords};
+}
+
+// seconds since 1970 for "YYYY-MM-DDTHH:MM:SS..." treated as UTC (consistent clock)
+const secEpoch=w=>Date.parse(w.slice(0,19)+'Z');
+
+function tailOf(fn){
+  let base=fn.replace(/^.*[\\/]/,'').replace(/\.kml$/i,'');
+  if(base.startsWith('TrackLog_')) base=base.slice('TrackLog_'.length);
+  return base.split('-')[0].slice(0,8) || base;
+}
+
+function buildTrackData(files){
+  const parsed=files.map(f=>{
+    const {whens,coords}=parseKML(f.text);
+    if(!whens.length) throw new Error(`${f.name}: no <when> timestamps`);
+    return {name:f.name, whens, coords, t0:secEpoch(whens[0]), label:f.label, color:f.color};
+  });
+  const epochMs=Math.min(...parsed.map(p=>p.t0));
+  let sumLat=0,sumLon=0,n=0;
+  parsed.forEach(p=>p.coords.forEach(c=>{sumLon+=c[0];sumLat+=c[1];n++;}));
+  const lat0=sumLat/n, lon0=sumLon/n;
+  const mlat=110570.0, mlon=111320.0*Math.cos(lat0*Math.PI/180);
+  const out={ref:{lat0,lon0}, epoch:new Date(epochMs).toISOString().slice(0,19)+'Z', tracks:[]};
+  let tmax=0;
+  parsed.forEach((p,i)=>{
+    const pts=[], m=Math.min(p.coords.length,p.whens.length);
+    for(let k=0;k<m;k++){
+      const [lon,lat,alt]=p.coords[k];
+      const sec=(secEpoch(p.whens[k])-epochMs)/1000;
+      const e=(lon-lon0)*mlon, north=(lat-lat0)*mlat, u=Math.max(alt,0);
+      pts.push([round1(e),round1(u),round1(north),Math.round(sec)]);
+      if(sec>tmax)tmax=sec;
+    }
+    out.tracks.push({
+      label:p.label || `JET ${i+1}`,
+      color:p.color || PALETTE[i] || PALETTE[0],
+      tail:tailOf(p.name),
+      start:Math.round((p.t0-epochMs)/1000),
+      maxalt_ft:Math.round(Math.max(...p.coords.map(c=>c[2]))*3.280839895),
+      pts,
+    });
+  });
+  out.tmax=Math.round(tmax);
+  return out;
+}
+
+// ============================================================
+// Landing screen: pick demo data or upload your own KML files
+// ============================================================
+(function(){
+  const landing=document.getElementById('landing');
+  const demoBtn=document.getElementById('demoBtn');
+  const buildBtn=document.getElementById('buildBtn');
+  const err=document.getElementById('lerr');
+  const cards=[...document.querySelectorAll('.jetcard')];
+
+  let launched=false;
+  function launch(data){
+    if(launched) return;
+    launched=true;
+    landing.style.display='none';
+    startViewer(data);
+  }
+
+  // "Save offline copy" link — points at the versioned standalone next to this page.
+  // Version is read from the brand tag so it auto-tracks releases. Shown only on the
+  // live http(s) site; in the downloaded standalone (file://) the link would be dead.
+  const dlBtn=document.getElementById('dlBtn');
+  if(location.protocol==='http:'||location.protocol==='https:'){
+    const ver=(document.querySelector('.vtag')?.textContent||'').trim();  // e.g. "v0.3"
+    const file='bfm-debrief-'+ver+'.html';
+    dlBtn.href=file;
+    dlBtn.setAttribute('download',file);
+    dlBtn.textContent='⤓ Save offline copy ('+ver+')';
+    dlBtn.hidden=false;
+  }
+
+  // about / info modal (landing page only)
+  const aboutEl=document.getElementById('about');
+  document.getElementById('aboutBtn').onclick=()=>aboutEl.classList.add('open');
+  document.getElementById('aboutClose').onclick=()=>aboutEl.classList.remove('open');
+  aboutEl.onclick=e=>{ if(e.target===aboutEl) aboutEl.classList.remove('open'); };  // backdrop click closes
+
+  // per-jet cards: name field, color swatches, and an independent file picker
+  cards.forEach((card,ci)=>{
+    card.dataset.color = PALETTE[ci] || PALETTE[0];
+    card.style.setProperty('--jc', card.dataset.color);
+    const host=card.querySelector('.swatches');
+    PALETTE.forEach(hex=>{
+      const s=document.createElement('div');
+      s.className='sw2'+(hex===card.dataset.color?' sel':'');
+      s.style.background=hex; s.style.color=hex;
+      s.onclick=()=>{ card.dataset.color=hex; card.style.setProperty('--jc',hex);
+        host.querySelectorAll('.sw2').forEach(x=>x.classList.toggle('sel',x===s)); };
+      host.appendChild(s);
+    });
+    const fileIn=card.querySelector('.kml'), fname=card.querySelector('.fname');
+    card.querySelector('.pick').onclick=()=>fileIn.click();
+    fileIn.onchange=async()=>{
+      const f=fileIn.files[0]; if(!f) return;
+      card._file=f; fname.textContent=f.name; fname.classList.add('has');
+      buildBtn.disabled = !cards.some(c=>c._file);
+      // peek at the track's coordinates so we can auto-detect the airspace
+      card._centroid=null;
+      try{
+        const {coords}=parseKML(await f.text());
+        if(coords.length){
+          let sLat=0,sLon=0;
+          for(const c of coords){ sLon+=c[0]; sLat+=c[1]; }
+          card._centroid={lat:sLat/coords.length, lon:sLon/coords.length};
+        }
+      }catch(e){ /* not a track log we can read — skip detection, build will report it */ }
+      refreshDetection();
+    };
+  });
+
+  // overlay checkboxes — airspaces (auto-detected) above TAM routes (manual)
+  const wptList=document.getElementById('wptList');
+  const cbFor={};      // overlay id -> its checkbox
+  let autoAir=null;    // airspace id we last auto-checked (so re-detect never fights a manual untick)
+  function addGroup(title,items){
+    if(!items.length) return;
+    const h=document.createElement('div'); h.className='wpt-grp'; h.textContent=title;
+    wptList.appendChild(h);
+    items.forEach(o=>{
+      const has=o.waypoints.length||o.areas.length||o.lines.length;
+      const lbl=document.createElement('label');
+      lbl.className='wpt-item'+(has?'':' disabled');
+      const cb=document.createElement('input');
+      cb.type='checkbox'; cb.dataset.wpt=o.id; if(!has) cb.disabled=true;
+      cbFor[o.id]=cb;
+      const dot=document.createElement('span'); dot.className='wpt-color'; dot.style.background=o.color;
+      const txt=document.createElement('span'); txt.textContent=o.label;
+      const badge=document.createElement('span');
+      badge.className='wpt-badge'; badge.dataset.badge=o.id; badge.textContent='detected'; badge.style.display='none';
+      lbl.append(cb,dot,txt,badge);
+      wptList.appendChild(lbl);
+    });
+  }
+  addGroup('Airspace', OVERLAYS.filter(o=>o.kind==='airspace'));
+  addGroup('TAM routes', OVERLAYS.filter(o=>o.kind==='route'));
+
+  // Combined centroid of the picked tracks -> auto-tick that base's airspace box
+  // (airspace only; routes stay manual). We remember what we auto-checked so a
+  // later re-detect never re-ticks a box the user deliberately unticked.
+  function refreshDetection(){
+    let sLat=0,sLon=0,n=0;
+    cards.forEach(c=>{ if(c._centroid){ sLat+=c._centroid.lat; sLon+=c._centroid.lon; n++; } });
+    const hit=n?detectAirspace(sLat/n,sLon/n):null;
+    OVERLAYS.forEach(o=>{ const b=wptList.querySelector(`[data-badge="${o.id}"]`);
+      if(b) b.style.display=(hit&&hit.id===o.id)?'':'none'; });
+    if(hit && hit.id!==autoAir){
+      if(autoAir&&cbFor[autoAir]) cbFor[autoAir].checked=false;   // undo the previous auto-pick
+      if(cbFor[hit.id]) cbFor[hit.id].checked=true;
+      autoAir=hit.id;
+    }else if(!hit && autoAir){
+      if(cbFor[autoAir]) cbFor[autoAir].checked=false; autoAir=null;
+    }
+  }
+
+  function getSelectedOverlays(){
+    return OVERLAYS.filter(o=>cbFor[o.id]?.checked &&
+      (o.waypoints.length||o.areas.length||o.lines.length));
+  }
+
+  buildBtn.onclick=async()=>{
+    err.textContent='';
+    const jets=cards.filter(c=>c._file).map(c=>{
+      const inp=c.querySelector('.jetname');
+      return {label:(inp.value.trim()||inp.defaultValue), color:c.dataset.color, file:c._file};
+    });
+    if(!jets.length){ err.textContent='Choose at least one KML file.'; return; }
+    try{
+      const files=await Promise.all(jets.map(async j=>
+        ({name:j.file.name, text:await j.file.text(), label:j.label, color:j.color})));
+      const data=buildTrackData(files);
+      data.overlays=getSelectedOverlays();
+      launch(data);
+    }catch(e){ err.textContent='Could not read those files: '+e.message; }
+  };
+
+  // load demo data on demand with a cache-buster so it's always the latest
+  demoBtn.onclick=()=>{
+    const attachWpt=d=>{
+      // the demo never goes through the file picker, so detect from its centroid
+      if(d.ref){
+        const hit=detectAirspace(d.ref.lat0,d.ref.lon0);
+        if(hit && cbFor[hit.id] && hit.id!==autoAir){
+          cbFor[hit.id].checked=true; autoAir=hit.id;
+          const b=wptList.querySelector(`[data-badge="${hit.id}"]`); if(b) b.style.display='';
+        }
+      }
+      d.overlays=getSelectedOverlays(); return d;
+    };
+    if(window.TRACK_DATA){ launch(attachWpt(window.TRACK_DATA)); return; }
+    err.textContent='Loading demo…';
+    const s=document.createElement('script');
+    s.src='trackdata.js?v='+Date.now();
+    s.onload=()=>{ if(window.TRACK_DATA){ err.textContent=''; launch(attachWpt(window.TRACK_DATA)); }
+                   else err.textContent='Demo data failed to load.'; };
+    s.onerror=()=>{ err.textContent='Demo data failed to load.'; };
+    document.head.appendChild(s);
+  };
+})();
+
+// ============================================================
+// Viewer \u2014 starts once data (demo or uploaded) is ready
+// ============================================================
+function startViewer(DATA){
+
+// subtitle from the data's epoch date
+try{
+  const d=new Date(Date.parse(DATA.epoch));
+  const MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('subt').textContent=
+    `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}catch(e){}
+
+// ---------- constants ----------
+const M2FT=3.280839895, MS2KT=1.943844, FT2M=0.3048;
+
+// ---------- TEST: non-standard-temperature altitude correction ----------
+// GPS logs geometric (true) altitude; the altimeter shows PRESSURE altitude.
+// For a standard lapse rate with only the surface temp changed, the two are
+// related by a single scale factor:  Hp = h * (288.15K / T0_actual).
+// Hot day -> factor < 1 -> corrected (indicated) altitude reads LOWER than GPS.
+const ISA_SL_K=288.15;
+const corr={on:true, surfF:95, factor:1};
+function f2k(f){ return (f-32)*5/9 + 273.15; }
+function recalcCorr(){ corr.factor = corr.on ? ISA_SL_K/f2k(corr.surfF) : 1; }
+recalcCorr();
+
+const SCALE=0.02;                 // 1 world unit = 50 m (horizontal)
+const VXbase=()=>state.vx;        // vertical exaggeration multiplier
+const COL=['#39d6ff','#ff3b54'];   // fallback colors when data has none (Fighter blue, Bandit red)
+
+// ---------- scene ----------
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x070b10);
+scene.fog=new THREE.FogExp2(0x070b10,0.000035/SCALE*0.02);
+
+const camera=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,1,200000);
+scene.add(new THREE.AmbientLight(0x8fb4cc,0.9));
+const dl=new THREE.DirectionalLight(0xffffff,0.6); dl.position.set(1,2,1); scene.add(dl);
+
+// ---------- build tracks ----------
+// pts: [E(m), Up(m), N(m), sec]
+const tracks=DATA.tracks.map((t,i)=>{
+  const P=t.pts;
+  // precompute speed (kt) & vs(fpm) & turn-rate proxy(g) per sample
+  const der=new Array(P.length).fill(null).map(()=>({gs:0,vs:0,g:0}));
+  for(let k=1;k<P.length;k++){
+    const a=P[k-1],b=P[k]; const dt=Math.max(b[3]-a[3],0.5);
+    const de=b[0]-a[0], dn=b[2]-a[2], du=b[1]-a[1];
+    const horiz=Math.hypot(de,dn);
+    der[k].gs=(horiz/dt)*MS2KT;
+    der[k].vs=(du/dt)*M2FT*60;
+  }
+  // turn g from horizontal velocity heading change
+  for(let k=2;k<P.length;k++){
+    const a=P[k-2],b=P[k-1],c=P[k];
+    const v1=Math.atan2(b[2]-a[2],b[0]-a[0]);
+    const v2=Math.atan2(c[2]-b[2],c[0]-b[0]);
+    let dpsi=v2-v1; while(dpsi>Math.PI)dpsi-=2*Math.PI; while(dpsi<-Math.PI)dpsi+=2*Math.PI;
+    const dt=Math.max(c[3]-a[3],1);
+    const spd=der[k].gs/MS2KT;            // m/s
+    const turnrate=Math.abs(dpsi)/dt;     // rad/s
+    const aLat=spd*turnrate;              // m/s^2 horizontal
+    der[k].g=Math.hypot(aLat,9.81)/9.81;  // approx total load incl 1g
+  }
+  return {meta:t,P,der,col:t.color||COL[i]||COL[0],
+    line:null,curtain:null,shadow:null,trail:null,marker:null,czone:null,vis:true,czoneOn:false};
+});
+
+// label each readout panel with the jet's name + color (from the data)
+tracks.forEach((tk,i)=>{
+  const rd=document.getElementById('rd'+(i+1)); if(!rd) return;
+  const nm=rd.querySelector('.nm span:last-child'); if(nm) nm.textContent=tk.meta.label;
+  const dot=rd.querySelector('.dot'); if(dot) dot.style.color=tk.col;
+});
+if(tracks.length<2){ const rd2=document.getElementById('rd2'); if(rd2) rd2.style.display='none'; }
+
+const group=new THREE.Group(); scene.add(group);
+
+function worldPos(p){ return new THREE.Vector3(p[0]*SCALE, p[1]*SCALE*state.vx, -p[2]*SCALE); }
+
+// ---------- T-45 Goshawk low-poly model (nose = +Z, right wing = +X, up = +Y) ----------
+function buildPlane(color){
+  const g=new THREE.Group();
+  const skin=new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.5,flatShading:true});
+  const surf=new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.5,side:THREE.DoubleSide,flatShading:true});
+  const dark=new THREE.MeshStandardMaterial({color:0x0a0f15,metalness:0.5,roughness:0.25});
+
+  // fuselage: body -> pointed radome nose -> tapered tail -> exhaust nozzle
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.075,0.9,16),skin);
+  body.rotation.x=Math.PI/2; g.add(body);
+  const nose=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.5,16),skin);
+  nose.rotation.x=Math.PI/2; nose.position.z=0.69; g.add(nose);
+  const tail=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.075,0.42,16),skin);
+  tail.rotation.x=Math.PI/2; tail.position.z=-0.63; g.add(tail);
+  const noz=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.05,0.07,16),dark);
+  noz.rotation.x=Math.PI/2; noz.position.z=-0.86; g.add(noz);
+
+  // long two-seat bubble canopy + dorsal spine
+  const can=new THREE.Mesh(new THREE.SphereGeometry(0.075,16,12),dark);
+  can.scale.set(0.78,0.82,2.6); can.position.set(0,0.065,0.27); g.add(can);
+  const spine=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.05,0.55,10),skin);
+  spine.rotation.x=Math.PI/2; spine.position.set(0,0.045,-0.18); g.add(spine);
+
+  // side intakes by the wing root (a T-45 signature)
+  const intakeGeo=new THREE.BoxGeometry(0.055,0.075,0.26);
+  [-1,1].forEach(s=>{const m=new THREE.Mesh(intakeGeo,skin); m.position.set(0.1*s,-0.005,0.1); g.add(m);});
+
+  // flat-surface helpers
+  function surfMesh(v){const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(v),3));
+    geo.computeVertexNormals(); return new THREE.Mesh(geo,surf);}
+  const quad=(a,b,c,d)=>[...a,...b,...c, ...a,...c,...d];
+  const mx=p=>[-p[0],p[1],p[2]];
+
+  // wings: low-mounted, swept leading edge, tapered tip
+  const wy=-0.03;
+  const A=[0.08,wy,0.16], B=[0.08,wy,-0.34], C=[0.66,wy,-0.46], D=[0.66,wy,-0.18];
+  g.add(surfMesh([...quad(A,B,C,D), ...quad(mx(A),mx(D),mx(C),mx(B))]));
+
+  // horizontal stabilizers (swept, at the tail)
+  const hy=0.0, hz=-0.66;
+  const E=[0.05,hy,hz+0.05], F=[0.05,hy,hz-0.12], H=[0.40,hy,hz-0.18], I=[0.40,hy,hz-0.04];
+  g.add(surfMesh([...quad(E,F,H,I), ...quad(mx(E),mx(I),mx(H),mx(F))]));
+
+  // single swept vertical tail (x≈0 plane)
+  const Vlb=[0,0.05,-0.42], Vrb=[0,0.05,-0.84], Vrt=[0.006,0.46,-0.78], Vlt=[0.006,0.46,-0.62];
+  g.add(surfMesh(quad(Vlb,Vrb,Vrt,Vlt)));
+
+  g.scale.setScalar(1.05);
+  return g;
+}
+
+// ---------- BFM control zone ----------
+// The aft region from which an attacker holds an offensive (controlling)
+// position. Crucially it lies along the defender's TURN CIRCLE extended aft —
+// not a straight cone out the 6 o'clock. We reconstruct the turn circle each
+// frame from velocity + lateral (in-plane) acceleration, then sweep a
+// truncated cone backward along that arc, in the jet's maneuvering plane.
+// Boundary: ±10° at 2000 ft aft, ±20° at 4000 ft aft → a frustum that widens
+// toward the back. When the jet isn't turning the arc straightens to a cone.
+const CZ_NEAR_FT=2000, CZ_FAR_FT=4000, CZ_NEAR_DEG=10, CZ_FAR_DEG=20;
+const CZ_NS=30, CZ_NR=24;  // segments along the arc / around the tube
+function buildCZone(color){
+  const pos=new Float32Array((CZ_NS+1)*CZ_NR*3), idx=[];
+  for(let i=0;i<CZ_NS;i++)for(let j=0;j<CZ_NR;j++){
+    const a=i*CZ_NR+j, b=i*CZ_NR+(j+1)%CZ_NR, c=(i+1)*CZ_NR+j, d=(i+1)*CZ_NR+(j+1)%CZ_NR;
+    idx.push(a,b,d, a,d,c);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setIndex(idx);
+  const grp=new THREE.Group();
+  const surf=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,
+    opacity:0.09,side:THREE.DoubleSide,depthWrite:false}));
+  const wire=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,
+    opacity:0.26,wireframe:true,depthWrite:false}));
+  surf.frustumCulled=false; wire.frustumCulled=false;
+  grp.add(surf); grp.add(wire); grp.frustumCulled=false; grp._geo=geo;
+  return grp;
+}
+
+// Rewrite the frustum's vertices to lie on the jet's turn circle, extended aft.
+// All math in data meters (ordering e,u,n), then projected through worldPos so
+// it tracks the displayed trajectory under vertical exaggeration.
+const CZ_sNear=CZ_NEAR_FT*FT2M, CZ_sFar=CZ_FAR_FT*FT2M;
+const CZ_rNear=CZ_NEAR_FT*Math.tan(CZ_NEAR_DEG*Math.PI/180)*FT2M;
+const CZ_rFar=CZ_FAR_FT*Math.tan(CZ_FAR_DEG*Math.PI/180)*FT2M;
+const CZ_H=3;  // half-window (s) for the velocity/curvature fit
+function czPos(tk,t){ const s=sampleAt(tk,t); return s?new THREE.Vector3(s.e,s.u,s.n):null; }
+function updateCZone(tk,s0){
+  const geo=tk.czone._geo, arr=geo.attributes.position.array;
+  const t=state.t, startT=tk.P[0][3], endT=tk.P[tk.P.length-1][3];
+  const P0=new THREE.Vector3(s0.e,s0.u,s0.n);
+  // Velocity & lateral acceleration from a quadratic (Savitzky-Golay) fit over
+  // a ±CZ_H s window rather than a ±1 s difference. With 1 s track sampling a
+  // tight second-difference swings frame-to-frame, rotating the turn-circle's
+  // centre and making the zone wobble; fitting a parabola over several seconds
+  // averages the curvature and gives a stable arc, with no per-frame state.
+  const m=Math.min(CZ_H,Math.floor(Math.min(t-startT,endT-t)));
+  let fwd, acc;
+  if(m>=1){
+    const Sy=new THREE.Vector3(), Sty=new THREE.Vector3(), St2y=new THREE.Vector3();
+    let N=0, S2=0, S4=0;
+    for(let k=-m;k<=m;k++){
+      const p=czPos(tk,t+k); if(!p) continue;
+      Sy.add(p); Sty.addScaledVector(p,k); St2y.addScaledVector(p,k*k);
+      N++; S2+=k*k; S4+=k*k*k*k;
+    }
+    fwd=Sty.multiplyScalar(1/S2);                              // linear coeff = velocity (m/s)
+    acc=St2y.multiplyScalar(N).addScaledVector(Sy,-S2).multiplyScalar(2/(N*S4-S2*S2)); // 2·quad coeff
+  } else {                                                     // track edge: fall back to ±1 s
+    const a=czPos(tk,Math.max(t-1,startT)), b=czPos(tk,Math.min(t+1,endT));
+    fwd=b.clone().sub(a).multiplyScalar(0.5);
+    acc=b.clone().add(a).addScaledVector(P0,-2);
+  }
+  const v=fwd.length();
+  if(v<1e-4){ tk.czone.visible=false; return; }
+  fwd.multiplyScalar(1/v);
+  const aPerp=acc.clone().addScaledVector(fwd,-acc.dot(fwd));
+  const aMag=aPerp.length();
+  // turn circle: radius R, center C = jet + R*nHat (nHat points to center)
+  let R=Infinity, nHat=null, mHat;
+  if(aMag>1e-3){
+    R=v*v/aMag;
+    nHat=aPerp.clone().multiplyScalar(1/aMag);
+    mHat=fwd.clone().cross(nHat).normalize();              // maneuvering-plane normal
+  }
+  if(!mHat){ // not turning: any frame perpendicular to fwd
+    const up=Math.abs(fwd.y)<0.99?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+    mHat=fwd.clone().cross(up).normalize();
+  }
+  const C=R!==Infinity?P0.clone().addScaledVector(nHat,R):null;
+  for(let i=0;i<=CZ_NS;i++){
+    const f=i/CZ_NS, s=CZ_sNear+(CZ_sFar-CZ_sNear)*f, r=CZ_rNear+(CZ_rFar-CZ_rNear)*f;
+    let cen, tan;
+    if(C){
+      const phi=s/R, cp=Math.cos(phi), sp=Math.sin(phi);
+      cen=C.clone().addScaledVector(nHat,-R*cp).addScaledVector(fwd,-R*sp);
+      tan=nHat.clone().multiplyScalar(sp).addScaledVector(fwd,-cp).normalize();
+    } else {
+      cen=P0.clone().addScaledVector(fwd,-s); tan=fwd.clone().negate();
+    }
+    const b1=tan.clone().cross(mHat).normalize();           // in-plane radial
+    for(let j=0;j<CZ_NR;j++){
+      const a=j/CZ_NR*Math.PI*2, cr=Math.cos(a)*r, sr=Math.sin(a)*r;
+      const wp=worldPos([cen.x+b1.x*cr+mHat.x*sr, cen.y+b1.y*cr+mHat.y*sr, cen.z+b1.z*cr+mHat.z*sr]);
+      const vi=(i*CZ_NR+j)*3; arr[vi]=wp.x; arr[vi+1]=wp.y; arr[vi+2]=wp.z;
+    }
+  }
+  geo.attributes.position.needsUpdate=true;
+  tk.czone.visible=true;
+}
+
+function rebuildGeometry(){
+  // (re)build everything affected by vertical exaggeration
+  tracks.forEach((tk)=>{
+    const P=tk.P;
+    // full line
+    if(tk.line){group.remove(tk.line);tk.line.geometry.dispose();}
+    const pos=new Float32Array(P.length*3);
+    for(let k=0;k<P.length;k++){const w=worldPos(P[k]);pos[k*3]=w.x;pos[k*3+1]=w.y;pos[k*3+2]=w.z;}
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    tk.line=new THREE.Line(g,new THREE.LineBasicMaterial({color:tk.col,transparent:true,opacity:0.55}));
+    tk.line.frustumCulled=false; group.add(tk.line);
+
+    // curtain (extrude to ground)
+    if(tk.curtain){group.remove(tk.curtain);tk.curtain.geometry.dispose();}
+    const cv=new Float32Array((P.length-1)*6*3);
+    for(let k=0;k<P.length-1;k++){
+      const a=worldPos(P[k]),b=worldPos(P[k+1]);
+      const a0=new THREE.Vector3(a.x,0,a.z), b0=new THREE.Vector3(b.x,0,b.z);
+      const o=k*18;
+      const tri=[a,b,b0, a,b0,a0];
+      for(let j=0;j<6;j++){cv[o+j*3]=tri[j].x;cv[o+j*3+1]=tri[j].y;cv[o+j*3+2]=tri[j].z;}
+    }
+    const cg=new THREE.BufferGeometry();
+    cg.setAttribute('position',new THREE.BufferAttribute(cv,3));
+    tk.curtain=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({color:tk.col,transparent:true,
+      opacity:0.07,side:THREE.DoubleSide,depthWrite:false}));
+    tk.curtain.frustumCulled=false; group.add(tk.curtain);
+
+    // ground shadow
+    if(tk.shadow){group.remove(tk.shadow);tk.shadow.geometry.dispose();}
+    const sp=new Float32Array(P.length*3);
+    for(let k=0;k<P.length;k++){sp[k*3]=P[k][0]*SCALE;sp[k*3+1]=0;sp[k*3+2]=-P[k][2]*SCALE;}
+    const sg=new THREE.BufferGeometry();
+    sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+    tk.shadow=new THREE.Line(sg,new THREE.LineBasicMaterial({color:tk.col,transparent:true,opacity:0.18}));
+    tk.shadow.frustumCulled=false; group.add(tk.shadow);
+
+    // trail (dynamic)
+    if(!tk.trail){
+      const tg=new THREE.BufferGeometry();
+      tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(4000*3),3));
+      tk.trail=new THREE.Line(tg,new THREE.LineBasicMaterial({color:tk.col,linewidth:2}));
+      tk.trail.frustumCulled=false; group.add(tk.trail);
+    }
+    // marker (T-45 model)
+    if(!tk.marker){
+      const m=new THREE.Group();
+      const plane=buildPlane(tk.col);
+      m.add(plane);
+      tk.marker=m; tk.plane=plane; group.add(m);
+    }
+    // control zone (aft frustum) — fixed size, oriented per frame
+    if(!tk.czone){ tk.czone=buildCZone(tk.col); group.add(tk.czone); }
+    applyVis(tk);
+  });
+  buildRangeVec();
+}
+
+function applyVis(tk){
+  tk.line.visible=tk.vis;
+  tk.curtain.visible=tk.vis&&state.curtain;
+  tk.shadow.visible=tk.vis&&state.shadow;
+  if(tk.czone) tk.czone.visible=tk.vis&&tk.czoneOn;
+}
+
+// range vector line between jets
+let rangeLine;
+function buildRangeVec(){
+  if(rangeLine){scene.remove(rangeLine);rangeLine.geometry.dispose();}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+  rangeLine=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x9ad84a,transparent:true,opacity:0.8}));
+  rangeLine.frustumCulled=false; scene.add(rangeLine);
+}
+
+// ---------- ground (brownish-green terrain + grid) ----------
+let grid;
+function buildGrid(){
+  const ext=4000; // world units
+  // filled ground plane just below the grid (covers the same area as the grid)
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(ext*2,ext*2),
+    new THREE.MeshStandardMaterial({color:0x5c6b34,roughness:1,metalness:0}));
+  ground.rotation.x=-Math.PI/2; ground.position.y=-1; scene.add(ground);
+  // grid lines on top, matched to the ground extent
+  grid=new THREE.GridHelper(ext*2, 80, 0x7d8a4a, 0x434d28);
+  grid.material.transparent=true; grid.material.opacity=0.55;
+  scene.add(grid);
+}
+buildGrid();
+
+// ---------- map overlays (airspaces + TAM routes) ----------
+const hasWpt=(DATA.overlays||[]).length>0;
+const wptGroup=new THREE.Group();
+scene.add(wptGroup);
+function makeWptLabel(text,color,wide){
+  const c=document.createElement('canvas'),ctx=c.getContext('2d');
+  c.width=512;c.height=96;
+  ctx.font='bold 36px Chakra Petch, sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.strokeStyle='#070b10';ctx.lineWidth=5;ctx.lineJoin='round';
+  ctx.strokeText(text,256,48);
+  ctx.fillStyle=color;ctx.fillText(text,256,48);
+  const tex=new THREE.CanvasTexture(c);
+  tex.minFilter=THREE.LinearFilter;
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false});
+  const sprite=new THREE.Sprite(mat);
+  const w=wide?50:32; sprite.scale.set(w,w*0.1875,1);
+  return sprite;
+}
+function buildWaypoints(){
+  const overlays=DATA.overlays||[];
+  if(!overlays.length) return;
+  const mlat=110570.0, mlon=111320.0*Math.cos(DATA.ref.lat0*Math.PI/180);
+  // [lon,lat] -> world Vector3 at world height h (overlays sit on/near the ground)
+  const toWorld=(lon,lat,h)=>{
+    const w=worldPos([(lon-DATA.ref.lon0)*mlon, 0, (lat-DATA.ref.lat0)*mlat]);
+    return new THREE.Vector3(w.x,h,w.z);
+  };
+  // names worth printing on the map (skip placeholders / verbose auto-names)
+  const labelable=s=>s && !/^untitled/i.test(s) && !/radius circle/i.test(s) && !/^line \d/i.test(s);
+
+  overlays.forEach(ov=>{
+    const col=new THREE.Color(ov.color);
+
+    // airspace areas — closed outline on the ground + a name label at the centroid
+    (ov.areas||[]).forEach(area=>{
+      const pts=area.coords.map(([lon,lat])=>toWorld(lon,lat,1));
+      if(pts.length<2) return;
+      const loop=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.5}));
+      loop.frustumCulled=false; wptGroup.add(loop);
+      if(labelable(area.name)){
+        let slon=0,slat=0; area.coords.forEach(([lo,la])=>{slon+=lo;slat+=la;});
+        const cen=toWorld(slon/area.coords.length, slat/area.coords.length, 6);
+        const lab=makeWptLabel(area.name,ov.color,false);
+        lab.position.copy(cen); lab.frustumCulled=false; wptGroup.add(lab);
+      }
+    });
+
+    // airspace lines — run-ins, boundaries, entry circles (label short named ones)
+    (ov.lines||[]).forEach(ln=>{
+      const pts=ln.coords.map(([lon,lat])=>toWorld(lon,lat,1));
+      if(pts.length<2) return;
+      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.45}));
+      line.frustumCulled=false; wptGroup.add(line);
+      if(labelable(ln.name) && ln.name.length<=18){
+        const mid=pts[pts.length>>1].clone(); mid.y=6;
+        const lab=makeWptLabel(ln.name,ov.color,false);
+        lab.position.copy(mid); lab.frustumCulled=false; wptGroup.add(lab);
+      }
+    });
+
+    // route waypoints — diamond + stem + label, joined in order
+    const wps=ov.waypoints||[];
+    wps.forEach(wp=>{
+      const base=toWorld(wp.lon,wp.lat,0);
+      const stem=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        base.clone(),new THREE.Vector3(base.x,5,base.z)]),
+        new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.6}));
+      stem.frustumCulled=false; wptGroup.add(stem);
+      const dia=new THREE.Mesh(new THREE.OctahedronGeometry(1.4,0),
+        new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.85}));
+      dia.position.set(base.x,5,base.z); dia.scale.y=1.4;
+      dia.frustumCulled=false; wptGroup.add(dia);
+      const label=makeWptLabel(wp.name,ov.color,true);
+      label.position.set(base.x,10,base.z);
+      label.frustumCulled=false; wptGroup.add(label);
+    });
+    if(wps.length>1){
+      const pts=wps.map(wp=>toWorld(wp.lon,wp.lat,0.5));
+      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.3}));
+      line.frustumCulled=false; wptGroup.add(line);
+    }
+  });
+  wptGroup.visible=state.waypoints;
+  const row=document.getElementById('wptToggleRow');
+  if(row) row.style.display='';
+}
+
+// ---------- interpolation ----------
+// first point index with time >= target
+function lb(P,time){let lo=0,hi=P.length;while(lo<hi){const m=(lo+hi)>>1;if(P[m][3]<time)lo=m+1;else hi=m;}return lo;}
+
+function sampleAt(tk,sec){
+  const P=tk.P;
+  if(sec<P[0][3]||sec>P[P.length-1][3]) return null;
+  // binary search
+  let lo=0,hi=P.length-1;
+  while(hi-lo>1){const m=(lo+hi)>>1; if(P[m][3]<=sec)lo=m;else hi=m;}
+  const a=P[lo],b=P[hi];
+  const f=(sec-a[3])/Math.max(b[3]-a[3],1e-6);
+  const e=a[0]+(b[0]-a[0])*f, u=a[1]+(b[1]-a[1])*f, n=a[2]+(b[2]-a[2])*f;
+  // nearest derived
+  const d=f<0.5?tk.der[lo]:tk.der[hi];
+  return {e,u,n,idx:hi,alt_ft:u*M2FT*corr.factor,gs:d.gs,vs:d.vs*corr.factor,g:d.g};
+}
+
+// 3D velocity (heading) vector in data coords, via a ±1s central difference
+function velVec(tk,sec){
+  const startT=tk.P[0][3], endT=tk.P[tk.P.length-1][3];
+  const a=sampleAt(tk,Math.max(sec-1,startT)), b=sampleAt(tk,Math.min(sec+1,endT));
+  if(!a||!b) return null;
+  return {e:b.e-a.e,u:b.u-a.u,n:b.n-a.n};
+}
+
+// ---------- state & time ----------
+const TMAX=DATA.tmax;
+const state={t:Math.min(DATA.start_at||0,TMAX),playing:false,speed:2,vx:1,
+  curtain:true,rangevec:true,traces:false,shadow:false,grid:true,waypoints:hasWpt,
+  trail:30,view:'free'};
+
+// angle off own nose toward the other jet: angle between own velocity and LOS
+function aonBetween(self,other,v){
+  if(!self||!other||!v) return null;
+  const losE=other.e-self.e, losU=other.u-self.u, losN=other.n-self.n;
+  const vl=Math.hypot(v.e,v.u,v.n), ll=Math.hypot(losE,losU,losN);
+  if(vl<1e-6||ll<1e-6) return null;
+  let dot=(v.e*losE+v.u*losU+v.n*losN)/(vl*ll);
+  dot=Math.max(-1,Math.min(1,dot));
+  return Math.acos(dot)*180/Math.PI;
+}
+
+// detect merges: a "pass" is a local minimum of separation inside MERGE_FT. It
+// counts as a merge only if, during the approach (the few seconds before the
+// closest point), BOTH jets had the other near their nose (angle-off-nose <
+// MERGE_AON). That mutual nose-on convergence is what separates a true merge
+// from a chase/formation pass, where the trailing jet's AON stays high.
+// Checking the approach (not the closest point) matters because the noses swing
+// rapidly through 90° at a fast crossing, after the jets are already inside the
+// range gate.
+// 3000 ft ≈ T-45 turn radius at corner airspeed (per NATOPS): two jets passing
+// closer than one corner-speed turn radius constitutes a merge.
+const MERGE_FT=3000, MERGE_AON=90, MERGE_LOOKBACK=8;
+const merges=[];
+const hasPair=tracks.length>=2;
+if(hasPair)(function(){
+  // separation (ft) between the jets at an arbitrary time. sampleAt interpolates
+  // between track points, so this is valid at sub-second t.
+  const sepAt=t=>{
+    const a=sampleAt(tracks[0],t), b=sampleAt(tracks[1],t);
+    return a&&b ? Math.hypot(a.e-b.e,a.u-b.u,a.n-b.n)*M2FT : Infinity;
+  };
+  // coarse pass at 1 s resolution to locate candidate passes
+  const sep=[];
+  for(let s=0;s<=TMAX;s++) sep.push(sepAt(s));
+  // the true closest-approach instant almost never lands on a whole second, so
+  // refine each candidate to ~0.02 s by scanning the [s-1, s+1] window. The
+  // reported merge time is then the exact moment of minimum separation — that's
+  // what the timeline tick and prev/next-merge buttons snap the ticker to.
+  const refine=s=>{
+    let bt=s, bs=sep[s];
+    for(let t=Math.max(0,s-1); t<=Math.min(TMAX,s+1)+1e-9; t+=0.02){
+      const d=sepAt(t); if(d<bs){ bs=d; bt=t; }
+    }
+    return {t:bt, sep:bs};
+  };
+  const cand=[];
+  for(let s=1;s<sep.length-1;s++){
+    if(sep[s]<MERGE_FT && sep[s]<=sep[s-1] && sep[s]<sep[s+1]){
+      let noseOn=false;
+      for(let u=Math.max(0,s-MERGE_LOOKBACK);u<=s;u++){
+        const aonA=aonBetween(sampleAt(tracks[0],u),sampleAt(tracks[1],u),velVec(tracks[0],u));
+        const aonB=aonBetween(sampleAt(tracks[1],u),sampleAt(tracks[0],u),velVec(tracks[1],u));
+        if(aonA!=null&&aonB!=null&&aonA<MERGE_AON&&aonB<MERGE_AON){ noseOn=true; break; }
+      }
+      if(noseOn) cand.push(refine(s));
+    }
+  }
+  // collapse minima within 20 s of each other, keeping the closest pass. merges[]
+  // stays a plain array of times (now sub-second) so downstream consumers are
+  // unchanged.
+  let lastSep=Infinity;
+  for(const c of cand){
+    const last=merges.length?merges[merges.length-1]:null;
+    if(last!=null && c.t-last<20){ if(c.sep<lastSep){ merges[merges.length-1]=c.t; lastSep=c.sep; } }
+    else { merges.push(c.t); lastSep=c.sep; }
+  }
+})();
+
+// ---------- orbit camera (custom, touch+mouse) ----------
+const orbit={tgt:new THREE.Vector3(0,300*SCALE,0),
+  r:2600,theta:0.9,phi:1.05};
+function updateCam(){
+  if(state.view==='god'){orbit.phi=0.001;}
+  const r=orbit.r;
+  const x=orbit.tgt.x+r*Math.sin(orbit.phi)*Math.cos(orbit.theta);
+  const y=orbit.tgt.y+r*Math.cos(orbit.phi);
+  const z=orbit.tgt.z+r*Math.sin(orbit.phi)*Math.sin(orbit.theta);
+  camera.position.set(x,Math.max(y,5),z);
+  camera.lookAt(orbit.tgt);
+}
+let drag=null;
+function onDown(x,y){drag={x,y,th:orbit.theta,ph:orbit.phi};state.view='free';markView();}
+function onMove(x,y){if(!drag)return;
+  orbit.theta=drag.th+(x-drag.x)*0.005;
+  orbit.phi=Math.min(Math.max(drag.ph-(y-drag.y)*0.005,0.05),Math.PI/2-0.02);}
+function onUp(){drag=null;}
+const cv=renderer.domElement;
+cv.addEventListener('mousedown',e=>onDown(e.clientX,e.clientY));
+addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+addEventListener('mouseup',onUp);
+cv.addEventListener('wheel',e=>{e.preventDefault();orbit.r=Math.min(Math.max(orbit.r*(1+Math.sign(e.deltaY)*0.08),40),9000);},{passive:false});
+let pinch=null;
+cv.addEventListener('touchstart',e=>{
+  if(e.touches.length===1)onDown(e.touches[0].clientX,e.touches[0].clientY);
+  else if(e.touches.length===2){pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);drag=null;}
+},{passive:true});
+cv.addEventListener('touchmove',e=>{
+  if(e.touches.length===1&&drag)onMove(e.touches[0].clientX,e.touches[0].clientY);
+  else if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    orbit.r=Math.min(Math.max(orbit.r*(pinch/d),40),9000);pinch=d;}
+},{passive:true});
+cv.addEventListener('touchend',()=>{onUp();pinch=null;});
+
+// ---------- UI ----------
+const $=s=>document.querySelector(s);
+const playBtn=$('#play');
+playBtn.onclick=()=>{state.playing=!state.playing;playBtn.textContent=state.playing?'PAUSE':'PLAY';
+  playBtn.classList.toggle('on',state.playing);};
+$('#rew').onclick=()=>{state.t=0;};
+$('#mprev').onclick=()=>{
+  const prev=merges.filter(m=>m<state.t-0.5).pop();
+  if(prev!=null) state.t=prev;
+};
+$('#mnext').onclick=()=>{
+  const next=merges.find(m=>m>state.t+0.5);
+  if(next!=null) state.t=next;
+};
+if(!merges.length){ ['#mprev','#mnext'].forEach(id=>{const b=$(id); if(b) b.disabled=true;}); }
+document.querySelectorAll('#spd button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#spd button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');state.speed=+b.dataset.s;});
+
+const panel=$('#panel'), gearBtn=$('#gear');
+// no stopPropagation: the document handler below closes the views menu and,
+// because the click target is the gear button, leaves this panel open.
+gearBtn.onclick=()=>panel.classList.toggle('open');
+// display toggles (switches in the gear dropdown)
+document.querySelectorAll('#panel .sw[data-t]').forEach(sw=>{
+  sw.classList.toggle('on',!!state[sw.dataset.t]);   // sync to defaults
+  sw.onclick=()=>{
+    const k=sw.dataset.t; state[k]=!state[k]; sw.classList.toggle('on',state[k]);
+    if(k==='grid')grid.visible=state[k];
+    if(k==='waypoints')wptGroup.visible=state[k];
+    tracks.forEach(applyVis);
+    rangeLine.visible=state.rangevec;
+  };
+});
+// per-jet control zone toggles (inside each readout box)
+document.querySelectorAll('.czt').forEach(btn=>{
+  const tk=tracks[+btn.dataset.cz];
+  if(!tk){ btn.style.display='none'; return; }
+  btn.classList.toggle('on',tk.czoneOn);
+  btn.onclick=()=>{ tk.czoneOn=!tk.czoneOn; btn.classList.toggle('on',tk.czoneOn); applyVis(tk); };
+});
+$('#trail').oninput=e=>{state.trail=+e.target.value;$('#trailv').textContent=state.trail?state.trail+' s':'off';};
+
+// camera-view dropdown (header). Move the menu to <body> so the header's
+// overflow/backdrop-filter can't clip it, and position it under the button.
+const viewsMenu=$('#views'), viewsBtn=$('#viewsBtn'), viewsWrap=$('#viewsWrap');
+document.body.appendChild(viewsMenu);
+const viewBtns=viewsMenu.querySelectorAll('button');
+viewBtns.forEach(b=>b.onclick=()=>{state.view=b.dataset.v;markView();viewsMenu.classList.remove('open');});
+function markView(){
+  viewBtns.forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
+  const cur=[...viewBtns].find(b=>b.dataset.v===state.view);
+  if(cur) viewsBtn.textContent='◳ '+cur.textContent+' ▾';
+}
+function placeMenu(){
+  const r=viewsBtn.getBoundingClientRect();
+  viewsMenu.style.top=(r.bottom+6)+'px';
+  viewsMenu.style.right=(innerWidth-r.right)+'px';
+}
+viewsBtn.onclick=e=>{e.stopPropagation();
+  panel.classList.remove('open');
+  if(!viewsMenu.classList.contains('open')) placeMenu();
+  viewsMenu.classList.toggle('open');};
+document.addEventListener('click',e=>{
+  if(!viewsWrap.contains(e.target) && !viewsMenu.contains(e.target)) viewsMenu.classList.remove('open');
+  if(!gearBtn.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('open');});
+
+// zoom buttons (tap = step, hold = continuous)
+function zoomBy(f){orbit.r=Math.min(Math.max(orbit.r*f,40),9000);}
+function holdZoom(btn,f){
+  let iv=null;
+  const start=e=>{e.preventDefault();zoomBy(f);iv=setInterval(()=>zoomBy(f),90);};
+  const stop=()=>{if(iv){clearInterval(iv);iv=null;}};
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('touchstart',start,{passive:false});
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>btn.addEventListener(ev,stop));
+}
+holdZoom($('#zin'),0.9);
+holdZoom($('#zout'),1.0/0.9);
+
+// north-up compass
+const compassSvg=$('#compassSvg');
+let compassTarget=null;
+$('#compass').onclick=()=>{
+  if(state.view==='chase1'||state.view==='chase2'||state.view==='side'){
+    state.view='free';markView();}
+  compassTarget=Math.PI/2;
+};
+
+// hold-to-rewind: scrub backward while pressed
+(function(){
+  const btn=$('#rewind'); let raf=null,last=0;
+  const step=now=>{const dt=(now-last)/1000;last=now;
+    state.t=Math.max(0,state.t-dt*state.speed*3);
+    raf=requestAnimationFrame(step);};
+  const start=e=>{e.preventDefault();state.playing=false;
+    playBtn.textContent='PLAY';playBtn.classList.remove('on');
+    btn.classList.add('on');last=performance.now();raf=requestAnimationFrame(step);};
+  const stop=()=>{if(raf){cancelAnimationFrame(raf);raf=null;}btn.classList.remove('on');};
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('touchstart',start,{passive:false});
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>btn.addEventListener(ev,stop));
+})();
+
+// scrub
+const scrub=$('#scrub');
+function scrubTo(clientX){const r=scrub.getBoundingClientRect();
+  state.t=Math.min(Math.max((clientX-r.left)/r.width,0),1)*TMAX;}
+let scrubbing=false;
+scrub.addEventListener('mousedown',e=>{scrubbing=true;scrubTo(e.clientX);});
+addEventListener('mousemove',e=>{if(scrubbing)scrubTo(e.clientX);});
+addEventListener('mouseup',()=>scrubbing=false);
+scrub.addEventListener('touchstart',e=>{scrubbing=true;scrubTo(e.touches[0].clientX);},{passive:true});
+scrub.addEventListener('touchmove',e=>{if(scrubbing)scrubTo(e.touches[0].clientX);},{passive:true});
+scrub.addEventListener('touchend',()=>scrubbing=false);
+
+// activity bands + merge tick
+(function(){
+  const w=scrub.clientWidth||innerWidth-24;
+  tracks.forEach((tk,i)=>{
+    const b=document.getElementById('b'+(i+1));
+    if(!b)return;
+    b.style.background=tk.col;
+    const s=tk.P[0][3]/TMAX, e=tk.P[tk.P.length-1][3]/TMAX;
+    b.style.left=(s*100)+'%'; b.style.width=((e-s)*100)+'%';
+  });
+  merges.forEach(m=>{
+    const tick=document.createElement('div');
+    tick.className='mtick';
+    tick.style.left=(m/TMAX*100)+'%';
+    tick.title='Merge '+mmss(m).replace('T+','');
+    scrub.appendChild(tick);
+  });
+})();
+
+// hide hint after a bit
+setTimeout(()=>{const h=$('#hint');h.style.transition='opacity 1s';h.style.opacity=0;},5000);
+
+// ---------- formatting ----------
+function hhmmss(sec){const t=new Date((Date.parse(DATA.epoch)+sec*1000));
+  return String(t.getUTCHours()).padStart(2,'0')+':'+String(t.getUTCMinutes()).padStart(2,'0')+':'+String(t.getUTCSeconds()).padStart(2,'0')+'Z';}
+function mmss(sec){sec=Math.max(0,Math.round(sec));const m=Math.floor(sec/60);return 'T+'+String(m).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
+function dur(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=Math.round(sec%60);
+  return (h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(s).padStart(2,'0');}
+
+const readEls=[
+  {alt:$('#rd1 [data-f=alt]'),gs:$('#rd1 [data-f=gs]'),vs:$('#rd1 [data-f=vs]'),g:$('#rd1 [data-f=g]'),aon:$('#rd1 [data-f=aon]'),aot:$('#rd1 [data-f=aot]')},
+  {alt:$('#rd2 [data-f=alt]'),gs:$('#rd2 [data-f=gs]'),vs:$('#rd2 [data-f=vs]'),g:$('#rd2 [data-f=g]'),aon:$('#rd2 [data-f=aon]'),aot:$('#rd2 [data-f=aot]')},
+];
+
+// ---------- main loop ----------
+let prevSep=null, prevT=null, last=performance.now();
+function frame(now){
+  const dt=(now-last)/1000; last=now;
+  if(state.playing && !scrubbing){state.t+=dt*state.speed;
+    if(state.t>TMAX){state.t=TMAX;state.playing=false;playBtn.textContent='PLAY';playBtn.classList.remove('on');}}
+
+  const s1=sampleAt(tracks[0],state.t), s2=tracks[1]?sampleAt(tracks[1],state.t):null;
+  const samp=[s1,s2];
+
+  // markers + trails + readouts
+  let centroid=new THREE.Vector3(),nC=0;
+  tracks.forEach((tk,i)=>{
+    const s=samp[i];
+    // full traces ON = whole flight; OFF = only flown-so-far (historical)
+    {
+      // line + curtain share one window so the trace follows the trail length:
+      //  traces ON = whole flight; else trail>0 limits how far back, trail off = full flown-so-far
+      const P=tk.P;
+      if(state.traces){
+        tk.line.geometry.setDrawRange(0,P.length);
+        tk.curtain.geometry.setDrawRange(0,(P.length-1)*6);
+      } else if(state.t<P[0][3]){
+        tk.line.geometry.setDrawRange(0,0);
+        tk.curtain.geometry.setDrawRange(0,0);
+      } else {
+        const tEnd=Math.min(state.t,P[P.length-1][3]);
+        const tStart=state.trail>0?Math.max(P[0][3],state.t-state.trail):P[0][3];
+        const segS=Math.max(lb(P,tStart)-1,0);
+        const segE=Math.max(lb(P,tEnd),segS);
+        tk.line.geometry.setDrawRange(segS,Math.max(segE-segS+1,1));
+        tk.curtain.geometry.setDrawRange(segS*6,Math.max(segE-segS,0)*6);
+      }
+    }
+    if(s){
+      tk.marker.visible=true;
+      const w=worldPos([s.e,s.u,s.n]);
+      tk.marker.position.copy(w);
+      // orient whole jet: nose along velocity, banked into the turn
+      const endT=tk.P[tk.P.length-1][3], startT=tk.P[0][3];
+      const sN=sampleAt(tk,Math.min(state.t+1,endT));
+      const sP=sampleAt(tk,Math.max(state.t-1,startT));
+      // control zone: frustum swept aft along this jet's turn circle
+      if(tk.czone){
+        if(tk.czoneOn&&tk.vis) updateCZone(tk,s);
+        else tk.czone.visible=false;
+      }
+      if(sN){
+        const wN=worldPos([sN.e,sN.u,sN.n]);
+        const wP=sP?worldPos([sP.e,sP.u,sP.n]):w.clone();
+        // nose along the velocity vector (central difference when possible)
+        const fwd=wN.clone().sub(wP);
+        if(fwd.lengthSq()<1e-8) fwd.copy(wN).sub(w);
+        if(fwd.lengthSq()>1e-8){
+          fwd.normalize();
+          const q0=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),fwd);
+          const someUp=new THREE.Vector3(0,1,0).applyQuaternion(q0); // canopy-up reference
+          // Roll from the actual load-factor vector: lift ∝ acceleration + g
+          // (the direction the airframe must push). This captures the VERTICAL
+          // fight — a jet pulling in the vertical rolls/inverts to keep its lift
+          // vector on the turn, which a horizontal-turn-rate estimate misses.
+          const gUp=9.81*SCALE*state.vx;
+          const accel=wN.clone().add(wP).addScaledVector(w,-2);    // ∝ d²x/dt² (dt=1s)
+          const lift=accel.clone().add(new THREE.Vector3(0,gUp,0));
+          // When barely maneuvering the roll is ambiguous, so default the lift
+          // vector toward the adversary — a fighter pulls lift-on-bandit.
+          const oth=samp[1-i];
+          if(oth){
+            const losW=worldPos([oth.e,oth.u,oth.n]).sub(w);
+            const losPerp=losW.addScaledVector(fwd,-losW.dot(fwd));
+            if(losPerp.lengthSq()>1e-9){
+              const trust=Math.min(1, accel.length()/(0.3*gUp)); // 1=trust maneuver, 0=ambiguous
+              lift.lerp(losPerp.setLength(lift.length()||gUp), 1-trust);
+            }
+          }
+          // roll so the canopy (+Y) points along the lift vector
+          const Lp=lift.addScaledVector(fwd,-lift.dot(fwd));
+          if(Lp.lengthSq()>1e-9){
+            Lp.normalize();
+            const roll=Math.atan2(new THREE.Vector3().crossVectors(someUp,Lp).dot(fwd), someUp.dot(Lp));
+            tk.plane.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(fwd,roll)).multiply(q0);
+          } else {
+            tk.plane.quaternion.copy(q0);
+          }
+        }
+      }
+      centroid.add(w);nC++;
+      // readout
+      if(readEls[i]){
+        readEls[i].alt.textContent=Math.round(s.alt_ft).toLocaleString()+' ft';
+        readEls[i].gs.textContent=Math.round(s.gs)+' kt';
+        readEls[i].vs.textContent=(s.vs>=0?'+':'')+Math.round(s.vs/10)*10+' fpm';
+        readEls[i].g.textContent=s.g.toFixed(1)+' g';
+        // angle off nose / tail relative to the other jet (3D LOS vs own velocity)
+        const oth=samp[1-i];
+        const aon=aonBetween(s,oth,velVec(tk,state.t));
+        if(aon!=null){
+          readEls[i].aon.textContent=Math.round(aon)+'°';
+          readEls[i].aot.textContent=Math.round(180-aon)+'°';
+        } else { readEls[i].aon.textContent='—'; readEls[i].aot.textContent='—'; }
+      }
+      // trail
+      if(state.trail>0){
+        const t0=state.t-state.trail, P=tk.P; const arr=tk.trail.geometry.attributes.position.array;
+        let n=0; for(let k=0;k<P.length&&n<4000;k++){if(P[k][3]>=t0&&P[k][3]<=state.t){
+          const wp=worldPos(P[k]);arr[n*3]=wp.x;arr[n*3+1]=wp.y;arr[n*3+2]=wp.z;n++;}}
+        if(n>0){const wp=worldPos([s.e,s.u,s.n]);if(n<4000){arr[n*3]=wp.x;arr[n*3+1]=wp.y;arr[n*3+2]=wp.z;n++;}}
+        tk.trail.geometry.setDrawRange(0,n);
+        tk.trail.geometry.attributes.position.needsUpdate=true;
+        tk.trail.visible=true;
+      } else tk.trail.visible=false;
+    } else {
+      tk.marker.visible=false; tk.trail.visible=false;
+      if(tk.czone) tk.czone.visible=false;
+      if(readEls[i])['alt','gs','vs','g','aon','aot'].forEach(f=>readEls[i][f].textContent='—');
+    }
+  });
+
+  // range vector + closure
+  const rngv=$('#rngv'), clov=$('#clov');
+  if(s1&&s2){
+    const de=s1.e-s2.e,du=s1.u-s2.u,dn=s1.n-s2.n;
+    const sep=Math.hypot(de,du,dn);             // meters
+    const ft=sep*M2FT, nm=sep/1852;
+    rngv.textContent = nm>=1 ? nm.toFixed(2)+' nm' : Math.round(ft)+' ft';
+    rngv.classList.toggle('hot',ft<1000);
+    // closure
+    if(prevSep!=null&&prevT!=null){const ddt=state.t-prevT;
+      if(Math.abs(ddt)>1e-3){const clo=((prevSep-sep)/ddt)*MS2KT; // kt, +=closing
+        clov.textContent=(clo>=0?'▼ '+Math.round(clo):'▲ '+Math.round(-clo))+' kt '+(clo>=0?'CLOSING':'OPENING');
+        clov.style.color=clo>=0?'var(--rng)':'var(--dim)';}}
+    prevSep=sep; prevT=state.t;
+    // line
+    const a=worldPos([s1.e,s1.u,s1.n]),b=worldPos([s2.e,s2.u,s2.n]);
+    const arr=rangeLine.geometry.attributes.position.array;
+    arr[0]=a.x;arr[1]=a.y;arr[2]=a.z;arr[3]=b.x;arr[4]=b.y;arr[5]=b.z;
+    rangeLine.geometry.attributes.position.needsUpdate=true;
+    rangeLine.visible=state.rangevec;
+  } else { rngv.textContent='—'; clov.textContent='single-ship'; rangeLine.visible=false; prevSep=null; }
+
+  // compass north-up animation
+  if(compassTarget!=null){
+    let d=compassTarget-orbit.theta;
+    while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
+    if(Math.abs(d)<0.005){orbit.theta=compassTarget;compassTarget=null;}
+    else orbit.theta+=d*0.15;
+  }
+
+  // camera target / chase
+  if(nC>0)centroid.multiplyScalar(1/nC);
+  if(state.view==='chase1'||state.view==='chase2'){
+    const me=state.view==='chase1'?samp[0]:samp[1];
+    const tgt=state.view==='chase1'?samp[1]:samp[0];
+    if(me){
+      const w=worldPos([me.e,me.u,me.n]);
+      orbit.tgt.lerp(tgt?worldPos([tgt.e,tgt.u,tgt.n]):w,0.2);
+      // place camera behind 'me' looking through to bandit
+      const look=(tgt?worldPos([tgt.e,tgt.u,tgt.n]):w).clone();
+      const dir=w.clone().sub(look).normalize();
+      camera.position.lerp(w.clone().add(dir.multiplyScalar(orbit.r*0.18)).add(new THREE.Vector3(0,orbit.r*0.05,0)),0.15);
+      camera.lookAt(orbit.tgt);
+    }
+  } else if(state.view==='side'){
+    orbit.tgt.lerp(centroid,0.1); orbit.theta=0; orbit.phi=Math.PI/2-0.02; updateCam();
+  } else if(state.view==='god'){
+    orbit.tgt.lerp(centroid,0.1); orbit.phi=0.01; updateCam();
+  } else {
+    orbit.tgt.lerp(centroid,0.06); updateCam();
+  }
+
+  // clock
+  $('#zt').textContent=hhmmss(state.t);
+  $('#elt').textContent=mmss(state.t)+' / '+dur(TMAX)+' · '+merges.length+' MERGE'+(merges.length===1?'':'S');
+  $('#fill').style.width=(state.t/TMAX*100)+'%';
+  $('#knob').style.left=(state.t/TMAX*100)+'%';
+
+  // compass arrow rotation
+  camera.updateMatrixWorld();
+  const northCam=new THREE.Vector3(0,0,-1).transformDirection(camera.matrixWorldInverse);
+  compassSvg.style.transform='rotate('+Math.atan2(northCam.x,northCam.y)+'rad)';
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+
+rebuildGeometry();
+buildWaypoints();
+grid.visible=state.grid;
+// wire the TEST temp-correction panel (frame() is always running, so changes
+// to corr.factor show up on the readout next frame — no manual redraw needed)
+(function setupTempCorr(){
+  const onEl=document.getElementById('tcOn');
+  const slider=document.getElementById('tcSlider');
+  const tempEl=document.getElementById('tcTemp');
+  const info=document.getElementById('tcInfo');
+  const altLabels=[...document.querySelectorAll('.read [data-f=alt]')].map(b=>b.previousElementSibling);
+  function refresh(){
+    corr.surfF=+slider.value; corr.on=onEl.checked; recalcCorr();
+    tempEl.textContent=corr.surfF+'°F';
+    const isaDevC=f2k(corr.surfF)-ISA_SL_K;   // sea-level ISA deviation (°C)
+    altLabels.forEach(l=>{ if(l) l.textContent=corr.on?'P ALT':'GPS ALT'; });
+    info.textContent=corr.on
+      ? `×${corr.factor.toFixed(4)} · ISA ${isaDevC>=0?'+':''}${isaDevC.toFixed(0)}°C`
+      : 'raw GPS (geometric) altitude';
+  }
+  onEl.onchange=refresh; slider.oninput=refresh; refresh();
+})();
+
+// initial framing
+orbit.tgt.copy(new THREE.Vector3(0,800*SCALE*state.vx,0));
+orbit.r=150;   // very close default zoom
+requestAnimationFrame(frame);
+
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);});
+
+} // end startViewer
+</script>
+</body>
+</html>
