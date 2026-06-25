@@ -250,7 +250,11 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       <div class="hd">Jet 1</div>
       <input class="jetname" type="text" value="Fighter" maxlength="20" spellcheck="false" autocapitalize="words">
       <div class="swatches"></div>
-      <input type="file" class="kml" accept=".kml,application/vnd.google-earth.kml+xml" hidden>
+      <!-- No accept filter on purpose: iPadOS types a .kml by the UTI of whatever
+           app "owns" it (ForeFlight stamps its own private type), so an accept list
+           grays out the file unless Google Earth is installed to register the public
+           KML type. We validate the KML contents after selection instead. -->
+      <input type="file" class="kml" hidden>
       <button class="pick">Choose KML file</button>
       <div class="fname">No file chosen</div>
     </div>
@@ -258,7 +262,11 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
       <div class="hd">Jet 2</div>
       <input class="jetname" type="text" value="Bandit" maxlength="20" spellcheck="false" autocapitalize="words">
       <div class="swatches"></div>
-      <input type="file" class="kml" accept=".kml,application/vnd.google-earth.kml+xml" hidden>
+      <!-- No accept filter on purpose: iPadOS types a .kml by the UTI of whatever
+           app "owns" it (ForeFlight stamps its own private type), so an accept list
+           grays out the file unless Google Earth is installed to register the public
+           KML type. We validate the KML contents after selection instead. -->
+      <input type="file" class="kml" hidden>
       <button class="pick">Choose KML file</button>
       <div class="fname">No file chosen</div>
     </div>
