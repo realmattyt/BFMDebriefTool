@@ -190,10 +190,10 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
 #aboutBtn{background:none;border:0;color:var(--dim);font-family:'Azeret Mono',monospace;
   font-size:11px;letter-spacing:.06em;cursor:pointer;padding:6px 10px}
 #aboutBtn:hover{color:var(--ink)}
-#dlBtn{display:inline-block;font-family:'Azeret Mono',monospace;font-size:11px;
+#dlBtn,#qsBtn,#pdfBtn{display:inline-block;font-family:'Azeret Mono',monospace;font-size:11px;
   letter-spacing:.06em;color:var(--dim);text-decoration:none;border:1px solid var(--line);
   border-radius:7px;padding:8px 16px;cursor:pointer}
-#dlBtn:hover{color:var(--ink);border-color:#2f4456}
+#dlBtn:hover,#qsBtn:hover,#pdfBtn:hover{color:var(--ink);border-color:#2f4456}
 
 /* waypoint overlays (landing page) */
 #wptSection{margin-top:2px;width:min(604px,90vw);text-align:left}
@@ -285,6 +285,8 @@ button.play{background:var(--hud);color:#04140d;border-color:var(--hud);min-widt
   <button id="demoBtn">▶ View demo flight</button>
   <div id="lerr"></div>
   <a id="dlBtn" hidden>⤓ Save offline copy</a>
+  <a id="qsBtn" hidden>📖 Read quick start</a>
+  <a id="pdfBtn" hidden>⤓ Quick start PDF</a>
   <button id="aboutBtn">ⓘ About &amp; contact</button>
 </div>
 
@@ -528,17 +530,32 @@ function buildTrackData(files){
     startViewer(data);
   }
 
-  // "Save offline copy" link — points at the versioned standalone next to this page.
-  // Version is read from the brand tag so it auto-tracks releases. Shown only on the
-  // live http(s) site; in the downloaded standalone (file://) the link would be dead.
+  // Landing footer links that point at sibling files on the GitHub Pages site:
+  // the versioned standalone, the quick-start guide, and the quick-start PDF.
+  // Filenames are derived from the brand version tag so they auto-track releases.
+  // All three are shown only on the live http(s) site; in the downloaded standalone
+  // (file://) these relative links would be dead, so they stay hidden there.
   const dlBtn=document.getElementById('dlBtn');
+  const qsBtn=document.getElementById('qsBtn');
+  const pdfBtn=document.getElementById('pdfBtn');
   if(location.protocol==='http:'||location.protocol==='https:'){
     const ver=(document.querySelector('.vtag')?.textContent||'').trim();  // e.g. "v0.3"
+    // offline copy of the app (versioned standalone next to this page)
     const file='bfm-debrief-'+ver+'.html';
     dlBtn.href=file;
     dlBtn.setAttribute('download',file);
     dlBtn.textContent='⤓ Save offline copy ('+ver+')';
     dlBtn.hidden=false;
+    // quick-start guide (opens the screenshot walkthrough online)
+    qsBtn.href='howto/howto.html';
+    qsBtn.target='_blank';
+    qsBtn.rel='noopener';
+    qsBtn.hidden=false;
+    // quick-start PDF (versioned, saves offline)
+    const pdf='BFM-Debrief-QuickStart-'+ver+'.pdf';
+    pdfBtn.href='howto/'+pdf;
+    pdfBtn.setAttribute('download',pdf);
+    pdfBtn.hidden=false;
   }
 
   // about / info modal (landing page only)
